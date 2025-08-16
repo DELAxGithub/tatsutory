@@ -1,0 +1,134 @@
+{
+  "project": "Living Room TV Area Declutter",
+  "locale": {
+    "country": "CA",
+    "city": "Toronto"
+  },
+  "tasks": [
+    {
+      "id": "LR01",
+      "title": "Sell TV on Facebook Marketplace",
+      "area": "living/tv",
+      "exit_tag": "SELL",
+      "priority": 4,
+      "effort_min": 30,
+      "labels": ["sell", "tv", "electronics"],
+      "checklist": [
+        "Check model number on back panel",
+        "Take photos: front, sides, back, model label, powered on",
+        "Write description including purchase year, condition, accessories",
+        "Research recent sold prices for same model",
+        "Post on Facebook Marketplace with pickup details"
+      ],
+      "links": [
+        "https://www.facebook.com/marketplace/",
+        "https://www.kijiji.ca/"
+      ],
+      "url": "https://www.facebook.com/marketplace/",
+      "due_at": "2025-08-20T18:00:00Z"
+    },
+    {
+      "id": "LR02",
+      "title": "Sell soundbar and gaming accessories bundle",
+      "area": "living/entertainment",
+      "exit_tag": "SELL",
+      "priority": 3,
+      "effort_min": 25,
+      "labels": ["sell", "audio", "gaming"],
+      "checklist": [
+        "Test soundbar functionality and record demo",
+        "Gather all remotes and cables",
+        "Bundle controllers and accessories",
+        "Take group photo of all items",
+        "Set bundle discount price"
+      ],
+      "links": [
+        "https://www.facebook.com/marketplace/"
+      ],
+      "url": "https://www.facebook.com/marketplace/",
+      "due_at": "2025-08-22T15:00:00Z"
+    },
+    {
+      "id": "LR03",
+      "title": "Bundle cables for e-waste drop-off",
+      "area": "living/storage",
+      "exit_tag": "RECYCLE",
+      "priority": 2,
+      "effort_min": 15,
+      "labels": ["recycle", "cables", "electronics"],
+      "checklist": [
+        "Collect all unused cables and adapters",
+        "Check Toronto Waste Wizard for e-waste guidelines",
+        "Find nearest drop-off location and hours",
+        "Bundle similar cables together",
+        "Schedule drop-off trip"
+      ],
+      "links": [
+        "https://www.toronto.ca/services-payments/recycling-organics-garbage/waste-wizard/"
+      ],
+      "url": null,
+      "due_at": "2025-08-25T12:00:00Z"
+    },
+    {
+      "id": "LR04",
+      "title": "Donate books to Little Free Library",
+      "area": "living/bookshelf",
+      "exit_tag": "GIVE",
+      "priority": 2,
+      "effort_min": 20,
+      "labels": ["give", "books", "community"],
+      "checklist": [
+        "Sort books by condition (good vs recycling)",
+        "Post good books in local Facebook groups",
+        "Find nearest Little Free Library location",
+        "Drop off remaining books",
+        "Recycle damaged books on paper recycling day"
+      ],
+      "links": [
+        "https://www.facebook.com/groups/",
+        "https://littlefreelibrary.org/"
+      ],
+      "url": null,
+      "due_at": "2025-08-23T14:00:00Z"
+    },
+    {
+      "id": "LR05",
+      "title": "Pack and move plants to new location",
+      "area": "living/windows",
+      "exit_tag": "KEEP",
+      "priority": 4,
+      "effort_min": 45,
+      "labels": ["keep", "plants", "moving"],
+      "checklist": [
+        "Water plants day before move",
+        "Wrap pots in newspaper or bubble wrap",
+        "Transport in boxes with air holes",
+        "Set up in new location immediately",
+        "Monitor for shock in first week"
+      ],
+      "links": [],
+      "url": null,
+      "due_at": "2025-08-19T09:00:00Z"
+    },
+    {
+      "id": "LR06",
+      "title": "Dispose of broken decorative items",
+      "area": "living/decor",
+      "exit_tag": "TRASH",
+      "priority": 1,
+      "effort_min": 10,
+      "labels": ["trash", "broken", "decor"],
+      "checklist": [
+        "Wrap broken glass items safely",
+        "Check garbage pickup schedule",
+        "Bag items appropriately",
+        "Set out on collection day"
+      ],
+      "links": [
+        "https://www.toronto.ca/services-payments/recycling-organics-garbage/"
+      ],
+      "url": null,
+      "due_at": "2025-08-21T08:00:00Z"
+    }
+  ]
+}
