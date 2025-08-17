@@ -4,8 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is "Tatsutori" - a task management and reminder import system for moving/decluttering projects. The codebase consists of:
+This is "Tatsutori" - a task management and reminder import system for moving/decluttering projects. 
 
+**Repository:** https://github.com/DELAxGithub/tatsutory.git
+
+The codebase consists of:
+
+- **iOS App** (`tatsutory/`) - SwiftUI iOS application for photo-based task generation using OpenAI GPT-4o
 - **JSON task definitions** (`tvmove.json`) - Structured project data with tasks, checklists, links, and metadata
 - **JXA automation script** (`tvmove copy.sc.json`) - JavaScript for Automation script to import tasks into Apple Reminders
 
