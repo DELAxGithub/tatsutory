@@ -1,0 +1,45 @@
+cat > /tmp/import_reminders.jxa <<'JXA'
+// usage: osascript -l JavaScript /tmp/import_reminders.jxa <json_path> [list_name]
+　
+  // JSON読み込み
+  var jsonText = app.read(Path(jsonPath));
+  var plan = JSON.parse(jsonText);
+  var tasks = plan.tasks || [];
+
+  // Reminders アプリ
+  var Reminders = Application("Reminders");
+  Reminders.includeStandardAdditions = true;
+
+  // リスト確保（なければ作成）
+  var lists = Reminders.lists.whose({ name: listName })();
+  var targetList = lists.length ? lists[0] : (function () {
+    Reminders.make({ new: Reminders.List, withProperties: { name: listName } });
+    return Reminders.lists.whose({ name: listName })()[0];
+  })();
+
+  // 追加
+  var added = 0;
+  tasks.forEach(function(t){
+    var title = "[" + (t.id || "TASK") + "] " + (t.title || "Untitled");
+    var bodyLines = [];
+    if (t.area) bodyLines.push("Area: " + t.area);
+    if (t.exit_tag) bodyLines.push("Exit: " + t.exit_tag);
+    if (t.effort_min) bodyLines.push("Effort: " + t.effort_min + " min");
+    if (t.labels && t.labels.length) bodyLines.push("Labels: " + t.labels.join(", "));
+    if (t.links && t.links.length) bodyLines.push("Links:\n" + t.links.join("\n"));
+    if (t.checklist && t.checklist.length) {
+      bodyLines.push("Checklist:");
+      t.checklist.forEach(function(s){ bodyLines.push("- " + s); });
+    }
+    var body = bodyLines.join("\n");
+
+    var r = Reminders.Reminder({ name: title, body: body });
+    r.container = targetList;
+    try { if ((t.priority || 0) >= 4) r.flagged = true; } catch(e){}
+    Reminders.make({ new: Reminders.Reminder, withProperties: r.properties() });
+    added += 1;
+  });
+
+  return "Imported " + added + " reminders into list \"" + listName + "\".";
+}
+JXA
