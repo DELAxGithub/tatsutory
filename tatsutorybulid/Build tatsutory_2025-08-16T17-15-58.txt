@@ -1,0 +1,10 @@
+
+Showing Recent Errors Only
+Prepare build
+Multiple commands produce '/Users/delax/Library/Developer/Xcode/DerivedData/tatsutory-akczqjmgubhclbeiilcgvlrmtjkw/Build/Products/Debug-iphoneos/tatsutory.app/Info.plist'
+
+Prepare packages
+Build target tatsutory
+
+
+Activity Log Complete    2025-08-16, 5:15 PM    1.4 seconds
