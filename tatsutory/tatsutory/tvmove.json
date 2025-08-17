@@ -1,0 +1,82 @@
+{
+  "project": "LivingRoom TV Area",
+  "locale": {"country":"CA","city":"Toronto"},
+  "tasks": [
+    {
+      "id":"LR01",
+      "title":"TVを売却（Facebook Marketplace）",
+      "exit_tag":"SELL",
+      "checklist":[
+        "背面型番を確認し、タイトルに含める",
+        "写真: 正面/側面/背面/型番/点灯/付属品",
+        "説明に購入年・状態・付属・受け渡し方法を記載",
+        "過去30日の相場検索 → 希望価格を設定",
+        "投稿→メッセージ応対テンプレ準備（受け渡し場所/支払い）"
+      ],
+      "links":[
+        "https://www.facebook.com/marketplace/",
+        "https://www.kijiji.ca/"
+      ],
+      "notes":"相場は型番で検索。重い商品のためロビー受け渡し推奨。"
+    },
+    {
+      "id":"LR02",
+      "title":"サウンドバーを売却（相場確認→出品）",
+      "exit_tag":"SELL",
+      "checklist":[
+        "型番・付属（リモコン/ケーブル）確認",
+        "動作確認動画を撮影",
+        "相場検索→価格決定",
+        "出品下書き作成→掲載"
+      ],
+      "links":[ "https://www.facebook.com/marketplace/" ]
+    },
+    {
+      "id":"LR03",
+      "title":"ゲーム周辺機器をバンドル売り",
+      "exit_tag":"SELL",
+      "checklist":[
+        "動作確認（各コントローラ）",
+        "写真を一枚に並べて撮影",
+        "バンドル割引価格を設定",
+        "掲載＆『まとめて引取歓迎』を明記"
+      ],
+      "links":[ "https://www.facebook.com/marketplace/" ]
+    },
+    {
+      "id":"LR04",
+      "title":"書籍をGIVEまたはリサイクル",
+      "exit_tag":"GIVE",
+      "checklist":[
+        "GIVE候補: 近隣掲示板/Little Free Libraryを検索",
+        "残りは古紙回収日に出す（回収日をリマインダーで設定）"
+      ],
+      "links":[
+        "https://www.toronto.ca/services-payments/recycling-organics-garbage/waste-wizard/"
+      ]
+    },
+    {
+      "id":"LR05",
+      "title":"不要ケーブルを電子廃棄へ",
+      "exit_tag":"RECYCLE",
+      "checklist":[
+        "動作品をSELL/GIVE、不明品はe-wasteにまとめる",
+        "最寄りのe-wasteドロップオフ拠点を検索→マップ保存",
+        "持込日を決めてリマインダーに日付設定"
+      ],
+      "links":[
+        "https://www.toronto.ca/services-payments/recycling-organics-garbage/waste-wizard/"
+      ]
+    },
+    {
+      "id":"LR06",
+      "title":"観葉植物：譲渡 or 搬出準備",
+      "exit_tag":"GIVE",
+      "checklist":[
+        "譲渡なら写真/鉢サイズを明記して募集",
+        "搬出なら前日夕方に水やり停止→養生"
+      ],
+      "links":[ "https://www.facebook.com/marketplace/" ]
+    }
+  ]
+}
