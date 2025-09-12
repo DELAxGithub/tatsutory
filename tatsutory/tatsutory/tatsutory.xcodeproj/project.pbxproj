@@ -8,7 +8,7 @@
 
 /* Begin PBXFileReference section */
 		DEE2F0DD2E512C20007151DD /* tatsutory.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tatsutory.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DEFDC7C42E5163F100C77563 /* tatsutory.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = tatsutory.xcodeproj; sourceTree = "<group>"; };
+		DEFDC96E2E51660900C77563 /* tatsutory.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = tatsutory.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -59,7 +59,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		DEFDC7C52E5163F100C77563 /* Products */ = {
+		DEFDC96F2E51660900C77563 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -120,8 +120,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = DEFDC7C52E5163F100C77563 /* Products */;
-					ProjectRef = DEFDC7C42E5163F100C77563 /* tatsutory.xcodeproj */;
+					ProductGroup = DEFDC96F2E51660900C77563 /* Products */;
+					ProjectRef = DEFDC96E2E51660900C77563 /* tatsutory.xcodeproj */;
 				},
 			);
 			projectRoot = "";
