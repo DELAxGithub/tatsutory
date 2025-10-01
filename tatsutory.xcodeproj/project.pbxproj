@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		CEFFF1952E8CBDB4003C866D /* tatsutory.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = tatsutory.xcodeproj; sourceTree = "<group>"; };
 		DEE2F0DD2E512C20007151DD /* tatsutory.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tatsutory.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEFDC7C42E5163F100C77563 /* tatsutory.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = tatsutory.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -43,6 +44,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CEFFF1992E8CBDB4003C866D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		DEE2F0D42E512C20007151DD = {
 			isa = PBXGroup;
 			children = (
@@ -122,6 +130,10 @@
 				{
 					ProductGroup = DEFDC7C52E5163F100C77563 /* Products */;
 					ProjectRef = DEFDC7C42E5163F100C77563 /* tatsutory.xcodeproj */;
+				},
+				{
+					ProductGroup = CEFFF1992E8CBDB4003C866D /* Products */;
+					ProjectRef = CEFFF1952E8CBDB4003C866D /* tatsutory.xcodeproj */;
 				},
 			);
 			projectRoot = "";

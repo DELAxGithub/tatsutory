@@ -26,9 +26,13 @@ struct PlanPreviewView: View {
         if viewModel.isImporting {
             ImportingView(progress: viewModel.importProgress, total: viewModel.selectedTasks.count)
         } else {
-            TaskListView(plan: plan, selectedTasks: viewModel.selectedTasks) { 
-                viewModel.toggleTask($0) 
-            }
+            TaskListView(
+                plan: plan,
+                selectedTasks: viewModel.selectedTasks,
+                onTaskToggle: { viewModel.toggleTask($0) },
+                onSelectAll: { viewModel.selectAllTasks(from: plan) },
+                onClearAll: { viewModel.clearAllTasks() }
+            )
         }
     }
     

@@ -4,6 +4,8 @@ struct TaskListView: View {
     let plan: Plan
     let selectedTasks: Set<String>
     let onTaskToggle: (String) -> Void
+    let onSelectAll: () -> Void
+    let onClearAll: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -17,8 +19,20 @@ struct TaskListView: View {
             Text(plan.project).font(.title2).fontWeight(.bold)
             Text("\(plan.locale.city), \(plan.locale.country)")
                 .font(.subheadline).foregroundColor(.secondary)
-            Text("\(selectedTasks.count) of \(plan.tasks.count) selected")
-                .font(.caption).foregroundColor(.blue)
+            HStack {
+                Text("\(selectedTasks.count) of \(plan.tasks.count) selected")
+                    .font(.caption).foregroundColor(.blue)
+                Spacer()
+                Button("Clear All") { onClearAll() }
+                    .font(.caption)
+                    .buttonStyle(.borderless)
+                Button("Select All") { onSelectAll() }
+                    .font(.caption)
+                    .buttonStyle(.borderless)
+            }
+            Text("Small items filtered out by default. Toggle back on if needed.")
+                .font(.caption2)
+                .foregroundColor(.secondary)
         }
         .padding(.horizontal)
     }
@@ -32,6 +46,7 @@ struct TaskListView: View {
                 ) { _ in onTaskToggle(task.id) }
             }
         }
+        .listStyle(.plain)
     }
 }
 

@@ -1,5 +1,6 @@
 import Foundation
 
+
 @MainActor
 class PlanPreviewViewModel: ObservableObject {
     @Published var selectedTasks: Set<String> = []
@@ -15,11 +16,18 @@ class PlanPreviewViewModel: ObservableObject {
         selectedTasks = Set(plan.tasks.map(\.id))
     }
     
+    func clearAllTasks() {
+        selectedTasks.removeAll()
+        TelemetryTracker.shared.trackClearAll()
+    }
+    
     func toggleTask(_ taskId: String) {
         if selectedTasks.contains(taskId) {
             selectedTasks.remove(taskId)
+            TelemetryTracker.shared.trackSelectionChange(taskId: taskId, enabled: false)
         } else {
             selectedTasks.insert(taskId)
+            TelemetryTracker.shared.trackSelectionChange(taskId: taskId, enabled: true)
         }
     }
     
@@ -34,13 +42,16 @@ class PlanPreviewViewModel: ObservableObject {
             
             importSuccess = true
             resultMessage = "Successfully imported \(imported) tasks to Reminders!"
+            TelemetryTracker.shared.trackExportResult(success: true, taskCount: imported)
             showingResult = true
         } catch {
             importSuccess = false
-            resultMessage = "Failed to import tasks: \(error.localizedDescription)"
+            resultMessage = "Failed to import tasks: \(error.localizedDescription)\nYou can retry after checking your Reminders access."
+            TelemetryTracker.shared.trackExportResult(success: false, taskCount: tasksToImport.count, error: error)
             showingResult = true
         }
         
         isImporting = false
+        TelemetryTracker.shared.flushIfNeeded()
     }
 }

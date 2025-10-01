@@ -5,6 +5,12 @@ struct SettingsView: View {
     @State private var apiKey: String = ""
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    @State private var goalDate = Date()
+    @State private var selectedContext: IntentContext = .moving
+    @State private var selectedBias: DisposalBias = .fastDispose
+    
+    private let intentStore = IntentSettingsStore.shared
+    private let consentStore = ConsentStore.shared
     
     var body: some View {
         NavigationView {
@@ -14,6 +20,30 @@ struct SettingsView: View {
                         .textContentType(.password)
                     
                     Text("Your API key is stored securely in Keychain and never shared.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Section(header: Text("Intent & Goal")) {
+                    Picker("Intent Context", selection: $selectedContext) {
+                        ForEach(IntentContext.allCases, id: \.self) { context in
+                            Text(context.displayName).tag(context)
+                        }
+                    }
+                    Picker("Disposal Bias", selection: $selectedBias) {
+                        ForEach(DisposalBias.allCases, id: \.self) { bias in
+                            Text(bias.displayName).tag(bias)
+                        }
+                    }
+                    DatePicker("Goal Date", selection: $goalDate, displayedComponents: .date)
+                }
+                
+                Section(header: Text("Privacy")) {
+                    Toggle("Allow AI label refinement", isOn: Binding(
+                        get: { consentStore.hasConsentedToVisionUpload },
+                        set: { consentStore.hasConsentedToVisionUpload = $0 }
+                    ))
+                    Text("When disabled, processing stays on-device and uses fallback tasks.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -60,6 +90,10 @@ struct SettingsView: View {
     
     private func loadAPIKey() {
         apiKey = Secrets.load()
+        goalDate = intentStore.goalDate
+        let intent = intentStore.currentIntent
+        selectedContext = intent.context
+        selectedBias = intent.bias
     }
     
     private func saveAPIKey() {
@@ -70,5 +104,7 @@ struct SettingsView: View {
             alertMessage = "Failed to save API key. Please try again."
             showingAlert = true
         }
+        intentStore.currentIntent = UserIntent(context: selectedContext, bias: selectedBias)
+        intentStore.goalDate = goalDate
     }
 }

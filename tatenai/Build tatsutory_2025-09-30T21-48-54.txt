@@ -1,0 +1,14 @@
+
+Showing Recent Errors Only
+
+Prepare build
+error: Multiple commands produce '/Users/hiroshikodera/Library/Developer/Xcode/DerivedData/tatsutory-cuhhzyfgrwucfjcpxbdukrxrdnyz/Build/Intermediates.noindex/tatsutory.build/Debug-iphoneos/tatsutory.build/Objects-normal/arm64/ImporterTests.stringsdata'
+    note: Target 'tatsutory' (project 'tatsutory') has Swift tasks not blocking downstream targets
+    note: Target 'tatsutory' (project 'tatsutory') has Swift tasks not blocking downstream targets
+
+
+Multiple commands produce '/Users/hiroshikodera/Library/Developer/Xcode/DerivedData/tatsutory-cuhhzyfgrwucfjcpxbdukrxrdnyz/Build/Intermediates.noindex/tatsutory.build/Debug-iphoneos/tatsutory.build/Objects-normal/arm64/ImporterTests.stringsdata'
+
+
+
+Build failed    2025-09-30, 9:48 PM    0.8 seconds

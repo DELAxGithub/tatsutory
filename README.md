@@ -83,6 +83,10 @@ TatsuTori focuses on **"getting rid of things"** (sell/give/recycle/trash/keep) 
 
 ## Development
 
+### Spec-Driven Workflow
+
+- Use spec-driven development with Claude Code by following `./.cckiro/specs/spec-driven-development/workflow.md` before starting significant changes.
+
 ### Project Structure
 
 ```

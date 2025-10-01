@@ -39,6 +39,16 @@ struct MainView: View {
                     PlanPreviewView(plan: plan) { viewModel.handlePlanCompletion(success: $0) }
                 }
             }
+            .alert("データ送信の確認", isPresented: $viewModel.showingConsentDialog) {
+                Button("送信を許可") {
+                    viewModel.recordConsent(true)
+                }
+                Button("端末内のみ", role: .cancel) {
+                    viewModel.recordConsent(false)
+                }
+            } message: {
+                Text(viewModel.consentMessage)
+            }
         }
     }
     
@@ -57,7 +67,7 @@ struct MainView: View {
     }
     
     private var actionButton: some View {
-        Button("Take Photo") { viewModel.showingCamera = true }
+        Button("Take Photo") { viewModel.handleTakePhotoTapped() }
             .buttonStyle(.borderedProminent)
             .font(.title2)
     }
