@@ -19,6 +19,7 @@ struct FallbackPlanner {
         return TidyTask(
             id: "FB01",
             title: "Sell large electronics (TV, etc.)",
+            note: nil,
             area: "living",
             exit_tag: .sell,
             priority: 4,
@@ -40,6 +41,7 @@ struct FallbackPlanner {
         return TidyTask(
             id: "RC01",
             title: "Bundle cables for e-waste drop-off",
+            note: nil,
             area: "electronics",
             exit_tag: .recycle,
             priority: 2,
@@ -60,6 +62,7 @@ struct FallbackPlanner {
         return TidyTask(
             id: "GV01",
             title: "Give away books and magazines",
+            note: nil,
             area: "books",
             exit_tag: .give,
             priority: 2,

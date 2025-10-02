@@ -1,8 +1,9 @@
 import Foundation
 
-public struct TidySchema {
-    public static let jsonSchema: [String: Any] = [
+struct TidySchema {
+    static let jsonSchema: [String: Any] = [
         "type": "object",
+        "additionalProperties": false,
         "properties": [
             "project": [
                 "type": "string",
@@ -10,6 +11,7 @@ public struct TidySchema {
             ],
             "locale": [
                 "type": "object",
+                "additionalProperties": false,
                 "properties": [
                     "country": ["type": "string"],
                     "city": ["type": "string"]
@@ -20,6 +22,7 @@ public struct TidySchema {
                 "type": "array",
                 "items": [
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": [
                         "id": [
                             "type": "string",
@@ -29,31 +32,9 @@ public struct TidySchema {
                             "type": "string",
                             "description": "Clear task description"
                         ],
-                        "area": [
+                        "note": [
                             "type": "string",
-                            "description": "Room or area name"
-                        ],
-                        "exit_tag": [
-                            "type": "string",
-                            "enum": ["SELL", "GIVE", "RECYCLE", "TRASH", "KEEP"],
-                            "description": "How to dispose of items"
-                        ],
-                        "priority": [
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 4,
-                            "description": "Task urgency (1=low, 4=urgent)"
-                        ],
-                        "effort_min": [
-                            "type": "integer",
-                            "minimum": 5,
-                            "maximum": 120,
-                            "description": "Estimated time in minutes"
-                        ],
-                        "labels": [
-                            "type": "array",
-                            "items": ["type": "string"],
-                            "description": "Tags for categorization"
+                            "description": "Reminder notes"
                         ],
                         "checklist": [
                             "type": "array",
@@ -65,22 +46,16 @@ public struct TidySchema {
                             "items": ["type": "string"],
                             "description": "Helpful URLs"
                         ],
-                        "url": [
-                            "type": "string",
-                            "format": "uri",
-                            "description": "Primary action URL"
-                        ],
                         "due_at": [
                             "type": "string",
                             "format": "date-time",
                             "description": "ISO8601 deadline"
                         ]
                     ],
-                    "required": ["id", "title", "exit_tag"]
+                    "required": ["id", "title", "due_at"]
                 ]
             ]
         ],
         "required": ["project", "locale", "tasks"]
     ]
 }
-

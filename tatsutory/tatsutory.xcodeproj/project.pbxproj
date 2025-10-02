@@ -6,28 +6,91 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXFileReference section */
-		DEE2F0DD2E512C20007151DD /* tatsutory.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tatsutory.app; sourceTree = BUILT_PRODUCTS_DIR; };
-/* End PBXFileReference section */
+/* Begin PBXBuildFile section */
+		CE3BAE552E8ED107009DD53A /* WBSComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE4D2E8ED107009DD53A /* WBSComposer.swift */; };
+		CE3BAE562E8ED107009DD53A /* FallbackPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE382E8ED107009DD53A /* FallbackPlanner.swift */; };
+		CE3BAE572E8ED107009DD53A /* LocaleGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE2E2E8ED107009DD53A /* LocaleGuide.swift */; };
+		CE3BAE582E8ED107009DD53A /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE3A2E8ED107009DD53A /* OpenAIService.swift */; };
+		CE3BAE592E8ED107009DD53A /* TelemetryTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE332E8ED107009DD53A /* TelemetryTracker.swift */; };
+		CE3BAE5A2E8ED107009DD53A /* IntentSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE2D2E8ED107009DD53A /* IntentSettings.swift */; };
+		CE3BAE5B2E8ED107009DD53A /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE512E8ED107009DD53A /* MainViewModel.swift */; };
+		CE3BAE5C2E8ED107009DD53A /* FeatureFlagOverrides.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE2C2E8ED107009DD53A /* FeatureFlagOverrides.swift */; };
+		CE3BAE5D2E8ED107009DD53A /* RemoteDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE3C2E8ED107009DD53A /* RemoteDetectionService.swift */; };
+		CE3BAE5E2E8ED107009DD53A /* CameraSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE352E8ED107009DD53A /* CameraSessionManager.swift */; };
+		CE3BAE5F2E8ED107009DD53A /* PlanPreviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE412E8ED107009DD53A /* PlanPreviewViewModel.swift */; };
+		CE3BAE602E8ED107009DD53A /* OpenAIResponsesEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE392E8ED107009DD53A /* OpenAIResponsesEnvelope.swift */; };
+		CE3BAE612E8ED107009DD53A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE482E8ED107009DD53A /* SettingsView.swift */; };
+		CE3BAE622E8ED107009DD53A /* TidyPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE3D2E8ED107009DD53A /* TidyPlanner.swift */; };
+		CE3BAE632E8ED107009DD53A /* tatsutoryApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE542E8ED107009DD53A /* tatsutoryApp.swift */; };
+		CE3BAE642E8ED107009DD53A /* TaskComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE4C2E8ED107009DD53A /* TaskComposer.swift */; };
+		CE3BAE652E8ED107009DD53A /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE472E8ED107009DD53A /* Secrets.swift */; };
+		CE3BAE662E8ED107009DD53A /* PlanSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE302E8ED107009DD53A /* PlanSource.swift */; };
+		CE3BAE672E8ED107009DD53A /* PlanPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE402E8ED107009DD53A /* PlanPreviewView.swift */; };
+		CE3BAE682E8ED107009DD53A /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE432E8ED107009DD53A /* TaskRowView.swift */; };
+		CE3BAE692E8ED107009DD53A /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE362E8ED107009DD53A /* CameraView.swift */; };
+		CE3BAE6A2E8ED107009DD53A /* PromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE3B2E8ED107009DD53A /* PromptBuilder.swift */; };
+		CE3BAE6B2E8ED107009DD53A /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE2B2E8ED107009DD53A /* Errors.swift */; };
+		CE3BAE6C2E8ED107009DD53A /* PhotoSplitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE4B2E8ED107009DD53A /* PhotoSplitService.swift */; };
+		CE3BAE6D2E8ED107009DD53A /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE422E8ED107009DD53A /* TaskListView.swift */; };
+		CE3BAE6E2E8ED107009DD53A /* HapticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE4F2E8ED107009DD53A /* HapticsManager.swift */; };
+		CE3BAE6F2E8ED107009DD53A /* TidySchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE3E2E8ED107009DD53A /* TidySchema.swift */; };
+		CE3BAE702E8ED107009DD53A /* SearchAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE312E8ED107009DD53A /* SearchAdapter.swift */; };
+		CE3BAE712E8ED107009DD53A /* RemindersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE452E8ED107009DD53A /* RemindersService.swift */; };
+		CE3BAE722E8ED107009DD53A /* IntentAdjuster.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE4A2E8ED107009DD53A /* IntentAdjuster.swift */; };
+		CE3BAE732E8ED107009DD53A /* DetectionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE2A2E8ED107009DD53A /* DetectionModels.swift */; };
+		CE3BAE742E8ED107009DD53A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE2F2E8ED107009DD53A /* Models.swift */; };
+		CE3BAE752E8ED107009DD53A /* IMG_0162.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = CE3BAE762E8ED107009DD53A /* IMG_0162.jpeg */; };
+		CE3BAE812E8ED107009DD53A /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE7F2E8ED107009DD53A /* Localization.swift */; };
+		CE3BAE822E8ED107009DD53A /* ExitTag+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3BAE802E8ED107009DD53A /* ExitTag+Localization.swift */; };
+		CE3BAE7E2E8ED107009DD53A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = CE3BAE7C2E8ED107009DD53A /* Localizable.strings */; };
+		DEE2F2012E6B0000007151DD /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEE2F2002E6B0000007151DD /* Vision.framework */; };
+/* End PBXBuildFile section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DEE2F11F2E5132EC007151DD /* Exceptions for "tatsutory" folder in "tatsutory" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-				TatsuToriTests,
-				tatsutoryTests,
-			);
-			target = DEE2F0DC2E512C20007151DD /* tatsutory */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+/* Begin PBXFileReference section */
+		CE3BAE2A2E8ED107009DD53A /* DetectionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectionModels.swift; sourceTree = "<group>"; };
+		CE3BAE2B2E8ED107009DD53A /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		CE3BAE2C2E8ED107009DD53A /* FeatureFlagOverrides.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlagOverrides.swift; sourceTree = "<group>"; };
+		CE3BAE2D2E8ED107009DD53A /* IntentSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentSettings.swift; sourceTree = "<group>"; };
+		CE3BAE7F2E8ED107009DD53A /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		CE3BAE802E8ED107009DD53A /* ExitTag+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ExitTag+Localization.swift"; sourceTree = "<group>"; };
+		CE3BAE2E2E8ED107009DD53A /* LocaleGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocaleGuide.swift; sourceTree = "<group>"; };
+		CE3BAE2F2E8ED107009DD53A /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		CE3BAE302E8ED107009DD53A /* PlanSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanSource.swift; sourceTree = "<group>"; };
+		CE3BAE7A2E8ED107009DD53A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		CE3BAE7B2E8ED107009DD53A /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		CE3BAE312E8ED107009DD53A /* SearchAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAdapter.swift; sourceTree = "<group>"; };
+		CE3BAE332E8ED107009DD53A /* TelemetryTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryTracker.swift; sourceTree = "<group>"; };
+		CE3BAE352E8ED107009DD53A /* CameraSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSessionManager.swift; sourceTree = "<group>"; };
+		CE3BAE362E8ED107009DD53A /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
+		CE3BAE382E8ED107009DD53A /* FallbackPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallbackPlanner.swift; sourceTree = "<group>"; };
+		CE3BAE392E8ED107009DD53A /* OpenAIResponsesEnvelope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIResponsesEnvelope.swift; sourceTree = "<group>"; };
+		CE3BAE3A2E8ED107009DD53A /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
+		CE3BAE3B2E8ED107009DD53A /* PromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptBuilder.swift; sourceTree = "<group>"; };
+		CE3BAE3C2E8ED107009DD53A /* RemoteDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDetectionService.swift; sourceTree = "<group>"; };
+		CE3BAE3D2E8ED107009DD53A /* TidyPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TidyPlanner.swift; sourceTree = "<group>"; };
+		CE3BAE3E2E8ED107009DD53A /* TidySchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TidySchema.swift; sourceTree = "<group>"; };
+		CE3BAE402E8ED107009DD53A /* PlanPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanPreviewView.swift; sourceTree = "<group>"; };
+		CE3BAE412E8ED107009DD53A /* PlanPreviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanPreviewViewModel.swift; sourceTree = "<group>"; };
+		CE3BAE422E8ED107009DD53A /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
+		CE3BAE432E8ED107009DD53A /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
+		CE3BAE452E8ED107009DD53A /* RemindersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersService.swift; sourceTree = "<group>"; };
+		CE3BAE472E8ED107009DD53A /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		CE3BAE482E8ED107009DD53A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CE3BAE4A2E8ED107009DD53A /* IntentAdjuster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentAdjuster.swift; sourceTree = "<group>"; };
+		CE3BAE4B2E8ED107009DD53A /* PhotoSplitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSplitService.swift; sourceTree = "<group>"; };
+		CE3BAE4C2E8ED107009DD53A /* TaskComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskComposer.swift; sourceTree = "<group>"; };
+		CE3BAE4D2E8ED107009DD53A /* WBSComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WBSComposer.swift; sourceTree = "<group>"; };
+		CE3BAE4F2E8ED107009DD53A /* HapticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticsManager.swift; sourceTree = "<group>"; };
+		CE3BAE512E8ED107009DD53A /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
+		CE3BAE542E8ED107009DD53A /* tatsutoryApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tatsutoryApp.swift; sourceTree = "<group>"; };
+		CE3BAE762E8ED107009DD53A /* IMG_0162.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = IMG_0162.jpeg; sourceTree = "<group>"; };
+		DEE2F0DD2E512C20007151DD /* tatsutory.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tatsutory.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DEE2F2002E6B0000007151DD /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DEE2F0DF2E512C20007151DD /* tatsutory */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DEE2F11F2E5132EC007151DD /* Exceptions for "tatsutory" folder in "tatsutory" target */,
-			);
 			path = tatsutory;
 			sourceTree = "<group>";
 		};
@@ -38,17 +101,155 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEE2F2012E6B0000007151DD /* Vision.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CE3BAE322E8ED107009DD53A /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE2A2E8ED107009DD53A /* DetectionModels.swift */,
+				CE3BAE2B2E8ED107009DD53A /* Errors.swift */,
+				CE3BAE2C2E8ED107009DD53A /* FeatureFlagOverrides.swift */,
+				CE3BAE2D2E8ED107009DD53A /* IntentSettings.swift */,
+				CE3BAE7F2E8ED107009DD53A /* Localization.swift */,
+				CE3BAE2E2E8ED107009DD53A /* LocaleGuide.swift */,
+				CE3BAE2F2E8ED107009DD53A /* Models.swift */,
+				CE3BAE802E8ED107009DD53A /* ExitTag+Localization.swift */,
+				CE3BAE302E8ED107009DD53A /* PlanSource.swift */,
+				CE3BAE312E8ED107009DD53A /* SearchAdapter.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		CE3BAE342E8ED107009DD53A /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE332E8ED107009DD53A /* TelemetryTracker.swift */,
+			);
+			path = Analytics;
+			sourceTree = "<group>";
+		};
+		CE3BAE372E8ED107009DD53A /* Camera */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE352E8ED107009DD53A /* CameraSessionManager.swift */,
+				CE3BAE362E8ED107009DD53A /* CameraView.swift */,
+			);
+			path = Camera;
+			sourceTree = "<group>";
+		};
+		CE3BAE3F2E8ED107009DD53A /* Planner */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE382E8ED107009DD53A /* FallbackPlanner.swift */,
+				CE3BAE392E8ED107009DD53A /* OpenAIResponsesEnvelope.swift */,
+				CE3BAE3A2E8ED107009DD53A /* OpenAIService.swift */,
+				CE3BAE3B2E8ED107009DD53A /* PromptBuilder.swift */,
+				CE3BAE3C2E8ED107009DD53A /* RemoteDetectionService.swift */,
+				CE3BAE3D2E8ED107009DD53A /* TidyPlanner.swift */,
+				CE3BAE3E2E8ED107009DD53A /* TidySchema.swift */,
+			);
+			path = Planner;
+			sourceTree = "<group>";
+		};
+		CE3BAE442E8ED107009DD53A /* Preview */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE402E8ED107009DD53A /* PlanPreviewView.swift */,
+				CE3BAE412E8ED107009DD53A /* PlanPreviewViewModel.swift */,
+				CE3BAE422E8ED107009DD53A /* TaskListView.swift */,
+				CE3BAE432E8ED107009DD53A /* TaskRowView.swift */,
+			);
+			path = Preview;
+			sourceTree = "<group>";
+		};
+		CE3BAE462E8ED107009DD53A /* Reminders */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE452E8ED107009DD53A /* RemindersService.swift */,
+			);
+			path = Reminders;
+			sourceTree = "<group>";
+		};
+		CE3BAE492E8ED107009DD53A /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE472E8ED107009DD53A /* Secrets.swift */,
+				CE3BAE482E8ED107009DD53A /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		CE3BAE4E2E8ED107009DD53A /* Split */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE4A2E8ED107009DD53A /* IntentAdjuster.swift */,
+				CE3BAE4B2E8ED107009DD53A /* PhotoSplitService.swift */,
+				CE3BAE4C2E8ED107009DD53A /* TaskComposer.swift */,
+				CE3BAE4D2E8ED107009DD53A /* WBSComposer.swift */,
+			);
+			path = Split;
+			sourceTree = "<group>";
+		};
+		CE3BAE502E8ED107009DD53A /* System */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE4F2E8ED107009DD53A /* HapticsManager.swift */,
+			);
+			path = System;
+			sourceTree = "<group>";
+		};
+		CE3BAE522E8ED107009DD53A /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE342E8ED107009DD53A /* Analytics */,
+				CE3BAE372E8ED107009DD53A /* Camera */,
+				CE3BAE3F2E8ED107009DD53A /* Planner */,
+				CE3BAE442E8ED107009DD53A /* Preview */,
+				CE3BAE462E8ED107009DD53A /* Reminders */,
+				CE3BAE492E8ED107009DD53A /* Settings */,
+				CE3BAE4E2E8ED107009DD53A /* Split */,
+				CE3BAE502E8ED107009DD53A /* System */,
+				CE3BAE512E8ED107009DD53A /* MainViewModel.swift */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		CE3BAE532E8ED107009DD53A /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE322E8ED107009DD53A /* Core */,
+				CE3BAE522E8ED107009DD53A /* Features */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		CE3BAE7C2E8ED107009DD53A /* Localizable.strings */ = {isa = PBXVariantGroup; children = (
+			CE3BAE7A2E8ED107009DD53A /* en */,
+			CE3BAE7B2E8ED107009DD53A /* ja */,
+		); name = Localizable.strings; sourceTree = "<group>"; };
+		CE3BAE772E8ED107009DD53A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				CE3BAE762E8ED107009DD53A /* IMG_0162.jpeg */,
+				CE3BAE7C2E8ED107009DD53A /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		DEE2F0D42E512C20007151DD = {
 			isa = PBXGroup;
 			children = (
+				CE3BAE532E8ED107009DD53A /* Sources */,
+				CE3BAE542E8ED107009DD53A /* tatsutoryApp.swift */,
+				CE3BAE772E8ED107009DD53A /* Resources */,
 				DEE2F0DF2E512C20007151DD /* tatsutory */,
 				DEE2F0DE2E512C20007151DD /* Products */,
+				DEE2F2002E6B0000007151DD /* Vision.framework */,
 			);
 			sourceTree = "<group>";
 		};
@@ -101,19 +302,18 @@
 				};
 			};
 			buildConfigurationList = DEE2F0D82E512C20007151DD /* Build configuration list for PBXProject "tatsutory" */;
-			developmentRegion = en;
+			developmentRegion = ja;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				ja,
 			);
 			mainGroup = DEE2F0D42E512C20007151DD;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DEE2F0DE2E512C20007151DD /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-			);
 			projectRoot = "";
 			targets = (
 				DEE2F0DC2E512C20007151DD /* tatsutory */,
@@ -126,6 +326,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE3BAE752E8ED107009DD53A /* IMG_0162.jpeg in Resources */,
+				CE3BAE7E2E8ED107009DD53A /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,6 +338,40 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE3BAE552E8ED107009DD53A /* WBSComposer.swift in Sources */,
+				CE3BAE562E8ED107009DD53A /* FallbackPlanner.swift in Sources */,
+				CE3BAE572E8ED107009DD53A /* LocaleGuide.swift in Sources */,
+				CE3BAE582E8ED107009DD53A /* OpenAIService.swift in Sources */,
+				CE3BAE592E8ED107009DD53A /* TelemetryTracker.swift in Sources */,
+				CE3BAE5A2E8ED107009DD53A /* IntentSettings.swift in Sources */,
+				CE3BAE5B2E8ED107009DD53A /* MainViewModel.swift in Sources */,
+				CE3BAE5C2E8ED107009DD53A /* FeatureFlagOverrides.swift in Sources */,
+				CE3BAE5D2E8ED107009DD53A /* RemoteDetectionService.swift in Sources */,
+				CE3BAE5E2E8ED107009DD53A /* CameraSessionManager.swift in Sources */,
+				CE3BAE5F2E8ED107009DD53A /* PlanPreviewViewModel.swift in Sources */,
+				CE3BAE602E8ED107009DD53A /* OpenAIResponsesEnvelope.swift in Sources */,
+				CE3BAE612E8ED107009DD53A /* SettingsView.swift in Sources */,
+				CE3BAE622E8ED107009DD53A /* TidyPlanner.swift in Sources */,
+				CE3BAE632E8ED107009DD53A /* tatsutoryApp.swift in Sources */,
+				CE3BAE642E8ED107009DD53A /* TaskComposer.swift in Sources */,
+				CE3BAE652E8ED107009DD53A /* Secrets.swift in Sources */,
+				CE3BAE662E8ED107009DD53A /* PlanSource.swift in Sources */,
+				CE3BAE812E8ED107009DD53A /* Localization.swift in Sources */,
+				CE3BAE672E8ED107009DD53A /* PlanPreviewView.swift in Sources */,
+				CE3BAE682E8ED107009DD53A /* TaskRowView.swift in Sources */,
+				CE3BAE692E8ED107009DD53A /* CameraView.swift in Sources */,
+				CE3BAE6A2E8ED107009DD53A /* PromptBuilder.swift in Sources */,
+				CE3BAE6B2E8ED107009DD53A /* Errors.swift in Sources */,
+				CE3BAE6C2E8ED107009DD53A /* PhotoSplitService.swift in Sources */,
+				CE3BAE6D2E8ED107009DD53A /* TaskListView.swift in Sources */,
+				CE3BAE6E2E8ED107009DD53A /* HapticsManager.swift in Sources */,
+				CE3BAE6F2E8ED107009DD53A /* TidySchema.swift in Sources */,
+				CE3BAE702E8ED107009DD53A /* SearchAdapter.swift in Sources */,
+				CE3BAE712E8ED107009DD53A /* RemindersService.swift in Sources */,
+				CE3BAE722E8ED107009DD53A /* IntentAdjuster.swift in Sources */,
+				CE3BAE732E8ED107009DD53A /* DetectionModels.swift in Sources */,
+				CE3BAE742E8ED107009DD53A /* Models.swift in Sources */,
+				CE3BAE822E8ED107009DD53A /* ExitTag+Localization.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,7 +381,7 @@
 		DEE2F0EC2E512C23007151DD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = tatsutory.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -153,11 +389,14 @@
 				DEVELOPMENT_TEAM = Z88477N5ZU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = tatsutory/Info.plist;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TatsuTori;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos of items to automatically generate decluttering tasks";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "Save generated tasks to your Reminders app for easy tracking";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -169,9 +408,10 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -179,7 +419,7 @@
 		DEE2F0ED2E512C23007151DD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = tatsutory.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -187,11 +427,14 @@
 				DEVELOPMENT_TEAM = Z88477N5ZU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = tatsutory/Info.plist;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TatsuTori;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos of items to automatically generate decluttering tasks";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "Save generated tasks to your Reminders app for easy tracking";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -203,9 +446,10 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

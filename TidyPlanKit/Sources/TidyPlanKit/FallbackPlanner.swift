@@ -1,12 +1,13 @@
 import Foundation
 
-public struct FallbackPlanner {
-    public static func generatePlan(locale: UserLocale = UserLocale(country: "CA", city: "Toronto")) -> Plan {
+struct FallbackPlanner {
+    static func generatePlan(locale: UserLocale = UserLocale(country: "CA", city: "Toronto")) -> Plan {
         let tasks = [
             createSellTask(),
             createRecycleTask(),
             createGiveTask()
         ]
+        
         return Plan(
             project: "Fallback Moving Plan",
             locale: locale,
@@ -15,9 +16,10 @@ public struct FallbackPlanner {
     }
     
     private static func createSellTask() -> TidyTask {
-        TidyTask(
+        return TidyTask(
             id: "FB01",
             title: "Sell large electronics (TV, etc.)",
+            note: nil,
             area: "living",
             exit_tag: .sell,
             priority: 4,
@@ -36,9 +38,10 @@ public struct FallbackPlanner {
     }
     
     private static func createRecycleTask() -> TidyTask {
-        TidyTask(
+        return TidyTask(
             id: "RC01",
             title: "Bundle cables for e-waste drop-off",
+            note: nil,
             area: "electronics",
             exit_tag: .recycle,
             priority: 2,
@@ -56,9 +59,10 @@ public struct FallbackPlanner {
     }
     
     private static func createGiveTask() -> TidyTask {
-        TidyTask(
+        return TidyTask(
             id: "GV01",
             title: "Give away books and magazines",
+            note: nil,
             area: "books",
             exit_tag: .give,
             priority: 2,
@@ -82,4 +86,3 @@ struct DateHelper {
         return ISO8601DateFormatter().string(from: futureDate)
     }
 }
-

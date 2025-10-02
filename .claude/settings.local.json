@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "mcpServers": {
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "$CONTEXT7_API_KEY"
+      },
+      "autoApprove": [
+        "resolve-library-id",
+        "get-library-docs"
+      ]
+    }
+  }
+}

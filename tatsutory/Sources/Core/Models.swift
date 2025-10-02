@@ -38,6 +38,7 @@ enum ExitTag: String, CaseIterable, Codable {
 struct TidyTask: Codable, Identifiable {
     let id: String
     let title: String
+    let note: String?
     let area: String?
     let exit_tag: ExitTag?
     let priority: Int?

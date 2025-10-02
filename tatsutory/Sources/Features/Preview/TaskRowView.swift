@@ -46,20 +46,21 @@ struct TaskRowView: View {
             if let area = task.area {
                 MetaLabel(text: area, icon: "location")
             }
-            MetaLabel(text: "\(task.effortMinutes)m", icon: "clock")
+            MetaLabel(text: L10n.string("task.meta.effort_minutes", task.effortMinutes), icon: "clock")
             if task.isHighPriority {
-                MetaLabel(text: "High", icon: "exclamationmark.triangle", color: .orange)
+                MetaLabel(text: L10n.string("task.meta.priority_high"), icon: "exclamationmark.triangle", color: .orange)
             }
             if task.dueDate != nil {
-                MetaLabel(text: "Due", icon: "calendar", color: .red)
+                MetaLabel(text: L10n.string("task.meta.due"), icon: "calendar", color: .red)
             }
         }
     }
-    
+
     @ViewBuilder
     private var checklistInfo: some View {
         if let checklist = task.checklist, !checklist.isEmpty {
-            Text("✓ \(checklist.count) step\(checklist.count == 1 ? "" : "s")")
+            let key = checklist.count == 1 ? "task.meta.steps.single" : "task.meta.steps"
+            Text(L10n.string(key, checklist.count))
                 .font(.caption).foregroundColor(.green)
         }
     }
@@ -69,7 +70,7 @@ struct ExitTagBadge: View {
     let exitTag: ExitTag
     
     var body: some View {
-        Label(exitTag.displayName, systemImage: exitTag.systemImage)
+        Label(exitTag.localizedName, systemImage: exitTag.systemImage)
             .font(.caption)
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(Color.blue.opacity(0.1))

@@ -3,7 +3,6 @@ import EventKit
 
 class RemindersService {
     private let eventStore = EKEventStore()
-    private let batchSize = 50
     
     func requestAccess() async throws {
         if #available(iOS 17, *) {
@@ -31,7 +30,7 @@ class RemindersService {
         
         // Create new list
         guard let defaultCalendar = eventStore.defaultCalendarForNewReminders() else {
-            throw TatsuToriError.reminderSaveFailed(NSError(domain: "RemindersService", code: 1, userInfo: [NSLocalizedDescriptionKey: "No default calendar available"]))
+            throw TatsuToriError.reminderSaveFailed(NSError(domain: "RemindersService", code: 1, userInfo: [NSLocalizedDescriptionKey: L10n.string("reminders.error.no_default_calendar")]))
         }
         
         let newCalendar = EKCalendar(for: .reminder, eventStore: eventStore)
@@ -46,78 +45,94 @@ class RemindersService {
         try await requestAccess()
         
         let calendar = try ensureList(named: listName)
+        guard !tasks.isEmpty else { return 0 }
+
         var importedCount = 0
-        
-        // Process in batches
-        let taskBatches = tasks.chunked(into: batchSize)
-        
-        for batch in taskBatches {
-            for task in batch {
-                try addTask(task, to: calendar)
+        do {
+            for task in tasks {
+                let reminder = try buildReminder(from: task, calendar: calendar)
+                try eventStore.save(reminder, commit: false)
                 importedCount += 1
             }
-            
-            // Commit batch
             try eventStore.commit()
+            return importedCount
+        } catch {
+            eventStore.reset()
+            throw error
         }
-        
-        return importedCount
     }
-    
-    private func addTask(_ task: TidyTask, to calendar: EKCalendar) throws {
+
+    private func buildReminder(from task: TidyTask, calendar: EKCalendar) throws -> EKReminder {
         let reminder = EKReminder(eventStore: eventStore)
         reminder.calendar = calendar
-        reminder.title = "[\(task.id)] \(task.title)"
-        
-        // Build notes content
-        var noteLines: [String] = []
-        
-        if let area = task.area {
-            noteLines.append("📍 Area: \(area)")
-        }
-        
-        noteLines.append("🏷️ Exit: \(task.exitTag.displayName)")
-        
-        if task.effortMinutes > 0 {
-            noteLines.append("⏱️ Effort: \(task.effortMinutes) min")
-        }
-        
-        if let labels = task.labels, !labels.isEmpty {
-            noteLines.append("🏷️ Labels: \(labels.joined(separator: ", "))")
-        }
-        
-        if let links = task.links, !links.isEmpty {
-            noteLines.append("\n🔗 Links:")
-            noteLines.append(contentsOf: links.map { "• \($0)" })
-        }
-        
-        if let checklist = task.checklist, !checklist.isEmpty {
-            noteLines.append("\n✅ Checklist:")
-            noteLines.append(contentsOf: checklist.map { "• \($0)" })
-        }
-        
-        reminder.notes = noteLines.joined(separator: "\n")
-        
-        // Set URL if available
-        if let urlString = task.url, let url = URL(string: urlString) {
-            reminder.url = url
-        }
-        
-        // Set due date and alarm
+        reminder.title = sanitizeTitle(task.title)
+        reminder.notes = composeNotes(primary: task.note, checklist: task.checklist, links: task.links)
+
         if let dueDate = task.dueDate {
-            let calendar = Calendar.current
-            reminder.dueDateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dueDate)
-            
-            // Add alarm for high priority tasks
-            if task.isHighPriority {
-                reminder.addAlarm(EKAlarm(absoluteDate: dueDate))
+            reminder.dueDateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: dueDate)
+        }
+
+        reminder.url = firstValidURL(from: task.links)
+        return reminder
+    }
+
+    private func sanitizeTitle(_ title: String) -> String {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return L10n.string("reminders.default_title") }
+        return String(trimmed.prefix(120))
+    }
+
+    private func composeNotes(primary: String?, checklist: [String]?, links: [String]?) -> String? {
+        var sections: [String] = []
+
+        if let main = sanitizeLine(primary) {
+            sections.append(main)
+        }
+
+        let checklistItems = sanitizeList(checklist)
+        if !checklistItems.isEmpty {
+            let lines = [L10n.string("reminders.section.checklist")] + checklistItems.map { "- \($0)" }
+            sections.append(lines.joined(separator: "\n"))
+        }
+
+        let linkItems = sanitizeList(links)
+        if !linkItems.isEmpty {
+            let lines = [L10n.string("reminders.section.links")] + linkItems.map { "- \($0)" }
+            sections.append(lines.joined(separator: "\n"))
+        }
+
+        guard !sections.isEmpty else { return nil }
+        return sections.joined(separator: "\n\n")
+    }
+
+    private func sanitizeLine(_ value: String?) -> String? {
+        guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
+            return nil
+        }
+        return String(value.prefix(280))
+    }
+
+    private func sanitizeList(_ values: [String]?) -> [String] {
+        guard let values = values else { return [] }
+        var seen = Set<String>()
+        var result: [String] = []
+        for value in values {
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            if seen.insert(trimmed).inserted {
+                result.append(String(trimmed.prefix(160)))
             }
         }
-        
-        // Set priority (1=high, 9=low in EventKit)
-        reminder.priority = task.isHighPriority ? 1 : 5
-        
-        try eventStore.save(reminder, commit: false) // Will commit in batch
+        return result
+    }
+
+    private func firstValidURL(from values: [String]?) -> URL? {
+        for value in sanitizeList(values) {
+            if let url = URL(string: value), url.scheme != nil {
+                return url
+            }
+        }
+        return nil
     }
     
     func deleteTodaysReminders(from listName: String) async throws -> Int {
@@ -144,9 +159,7 @@ class RemindersService {
         // Filter to today's reminders with our format
         let todaysReminders = reminders.filter { reminder in
             guard let creationDate = reminder.creationDate,
-                  creationDate >= today && creationDate < tomorrow,
-                  let title = reminder.title,
-                  title.contains("[") else {
+                  creationDate >= today && creationDate < tomorrow else {
                 return false
             }
             return true
@@ -163,15 +176,5 @@ class RemindersService {
         }
         
         return deletedCount
-    }
-}
-
-// MARK: - Array Extension
-
-extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        return stride(from: 0, to: count, by: size).map {
-            Array(self[$0..<Swift.min($0 + size, count)])
-        }
     }
 }

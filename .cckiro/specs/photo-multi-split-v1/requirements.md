@@ -3,95 +3,97 @@ title: Photo Multi Split v1 Requirements
 slug: photo-multi-split-v1
 owner: @tatsu-mobile
 created: 2025-09-15
-updated: 2025-09-15
+updated: 2025-10-01
 status: Approved
 ---
 
 # Requirements Specification / 要件定義
 
 ## Summary / 概要
-- Goal / 目的: 1枚の写真から複数アイテムを抽出し、ユーザー意図とゴール日オフセットに基づく出口タスクを30秒以内でApple Remindersへ登録できるようにする。
-- Context / 背景: MVPカメラフローを拡張し、単一写真でも複数アイテムを自動整理しつつ、意図モードとWBSロジックを連携させる第一弾アップデート。
+- Goal / 目的: Oct 2025 出荷向け TatsuTori MVP 完成ラインをここで確定し、実装と検証の終着点を共有する。
+- Context / 背景: 「写真→AI分割→期限付きタスク→Reminders」までを一気通貫で提供し、意図設定と地域特化を武器とした初回リリースを成立させる。
 
-## Goals & Success Metrics / 目標と成功指標
-- G1: 高精度なマルチアイテム抽出でプレビュー編集工数を最小化する。
-- G2: ユーザー意図とゴール日オフセットを自動反映し、手動調整を不要化する。
-- G3: 30秒以内にエクスポート完了するレスポンスを維持する。
-- Metrics / 指標:
-  - 抽出数の実数±1一致率 ≥ 80%
-  - プレビューでの不要タスクOFF率 < 20%
-  - P50レイテンシ ≤ 5s / P95 ≤ 10s（撮影→プレビュー）
-  - E2E（撮影→Reminders登録完了）P95 ≤ 30s
-  - Remindersエクスポート成功率 ≥ 95%
+## 1. コア体験（絶対必須）
+- 単一画像入力（撮影 or ライブラリ）。
+- GPT-5 mini Vision を利用し最大8件のアイテム JSON（`id`, `label`, `bbox`, `confidence`）を取得。
+- Intent設定を参照し、WBSロジックで exit_tag・期限（goal_date + offset）・チェックリスト・地域リンクを確定。
+- プレビューでタスクを確認し、個別に除外可能（全OFF→必要だけON対応）。
+- Reminders へタイトル・ノート・期限（必要に応じてチェックリスト記載）付きで一括登録。
+- 成果物は常に JSON schema 一致の状態で RemindersService へ渡す。
 
-## Schedule / スケジュール
-- 設計レビュー完了: 2025-10-07
-- 実装完了（photo_multi_splitフラグONで検証開始）: 2025-10-21
+## 2. Intent設定（差別化の核）
+- 初回アンケート＋Settingsで保持。
+- 必須フィールド: Purpose（`move_fast` / `move_value` / `cleanup` / `legacy_hidden`）、Goal date（日付ピッカー）、Region（`JP` / `CA-TO` / `Other`）、Reminders list（既存選択 or 新規作成）。
+- Advanced: 小物しきい値（`low` / `default` / `high`）、最大タスク数（≤8）、オフセット編集（初期値 SELL:-7, GIVE:-5, RECYCLE:-3, TRASH:-2, KEEP:-1）、LLM consent（Keychain保持）。
+- 設定変更時は Telemetry で intent_changed を記録、legacy_hidden への切り替えは legacy_mode_enabled を記録。
 
-## Scope / 対象範囲
-- In Scope / 対象:
-  - 単一写真から最大8件までのアイテム検出（デフォルトで小物除外）
-  - 意図モード（引っ越し/終活 + 売る優先/早く処分）による粒度・出口方針調整
-  - move_out_dateに基づく期限逆算（SELL:-7 / GIVE:-5 / RECYCLE:-3 / TRASH:-2 / KEEP:-1）
-  - プレビュー画面の全OFF→個別ON操作、個別トグルUI
-  - Apple Remindersへの一括エクスポート（タイトル/ノート/期限 設定）
-- Out of Scope / 非対象:
-  - 価格推定、複数写真の統合、Todoist/Notion等の他プラットフォーム連携
-  - 高負荷なオンデバイス学習や高度な画像編集
-  - 地域ガイドの新規拡充（既存テンプレ参照のみ）
+## 3. 地域プリセット
+- JP: 自治体ゴミ検索、メルカリ、ヤフオク、ジモティーリンク。
+- CA-TO: Waste Wizard、e-waste ドロップオフ、Facebook Marketplace、Kijiji リンク。
+- Other: 汎用的な整理術リンク（1件以上）。
+- これらをタスクノート（もしくはチェックリストセクション）へ自動添付する。
 
-## Functional Requirements / 機能要件
-- FR-1: 単一写真から最大8件のアイテム候補を検出し、バウンディングボックスとカテゴリラベルを付与する。
-- FR-2: 意図モードに応じて小物や低価値アイテムを除外し、抽出結果を調整する。
-- FR-3: move_out_dateを基準に出口タグごと（SELL/GIVE/RECYCLE/TRASH/KEEP）の期限オフセットを自動適用する。
-- FR-4: プレビュー画面で「全OFF→必要だけON」が1アクションで可能となり、個別トグルでON/OFFを切り替えられる。
-- FR-5: Apple Remindersへタイトル・ノート・期限を含むタスクとして一括エクスポートできる。
+## 4. Reminders 出力仕様
+- タイトル形式: `<Item> [SELL|GIVE|RECYCLE|TRASH|KEEP]`。
+- ノート: チェックリスト風手順（1行1項目）、地域リンク、参照URLの順で整理。不要情報は含めない。
+- 期限: `goal_date + offset(exitTag)` を ISO8601 で設定。タイムゾーンは端末設定に従う。
+- リスト: Intent設定で選択されたものを必須使用。必要に応じて自動作成。
+- RemindersService は失敗時に部分コミットを残さずロールバックし、成功時のみ commit。
 
-## Non-Functional Requirements / 非機能要件
-- NFR-1: 撮影→プレビュー表示のレイテンシがP50 ≤ 5s, P95 ≤ 10s。
-- NFR-2: 撮影→Reminders登録完了までのE2EがP95 ≤ 30s。
-- NFR-3: 初回エクスポート成功率が95%以上。
-- NFR-4: 検証写真セットで抽出数±1一致率 ≥ 80%、主要ラベル正答率 ≥ 80%。
-- NFR-5: 初回同意UIでデータ送信可否を取得し、拒否時はオフラインFallback（汎用タスク＋期限=goal-3d）を提供する。
+## 5. Fallback & 安定性
+- consent=OFF または allowNetwork=false → ローカル汎用タスク1件（期限=goal_date-3d、KEEP想定）を生成。
+- JSON schema 不一致や LLM 応答欠損 → 即座にローカル TaskComposer プランへフォールバック。
+- 429 等レート制限 → planSource を `RATELIMIT` とし、ローカルプランを維持。
+- どの経路でも Reminders には最低1件のタスクが登録される。
 
-## SLO & Constraints / SLO・制約
-- プライバシ: 既定で端末内保持。送信時はサムネイル圧縮を優先し、明示同意時のみAPIへ送信。
-- モデル制約: CoreML/軽量YOLO or Vision+LLM補助のいずれかを採用し、モデルサイズはアプリバンドル基準を満たす。
-- デバイス: iOS 17+、iPhone 12相当以上をターゲット。
+## 6. Telemetry 要件
+- detector_route (`remote` / `local_fallback`)。
+- detector_remote_status（`success` / `429` / `schema_invalid` / その他エラー内容）。
+- detection_raw_count、detection_after_threshold_count（正規化後の件数とドロップ数含む）。
+- intent_changed、legacy_mode_enabled。
+- ai_enrichment_attempt/success/rate_limited/skipped。
+- export_success/export_failure。
+- perf_capture_to_preview_ms、perf_detect_ms_remote、必要なら perf_preview_to_export_ms。
+- すべて DEBUG ではログ可視化、本番はバッチ送信対応。
 
-## Deliverables / 成果物
-- D1: マルチアイテム検出サービスと意図モード対応フィルタの実装。
-- D2: プレビューUIの全OFF/個別トグル機能と小物除外設定。
-- D3: ゴール日オフセットを反映したRemindersエクスポート実装とノート整備。
-- D4: テレメトリ（レイテンシ、削除率、エクスポート結果）収集の計測ポイント追加。
-- D5: QAチェックリストと検証データセット（50枚）に対する結果レポート。
+## 7. 受け入れ基準（AC）
+- AC-1: 10枚スモークテストで検出件数が ground truth の ±1 に収まる率 ≥ 80%。
+- AC-2: Reminders 登録タスクの期限が Intent オフセット表に完全一致する。
+- AC-3: Consent=OFF もしくはネット切断時に必ず Fallback タスク（期限=goal-3d）が生成される。
+- AC-4: capture→preview P50 ≤ 5s / P95 ≤ 10s、export 成功率 ≥ 95%。
+- AC-5: プレビュー画面の planSource バッジ（LOCAL / OPENAI / RATELIMIT）が状態に応じて変化。
 
-## Acceptance Criteria / 受け入れ基準
-- AC-1（抽出品質・FR-1, FR-2, NFR-4）: 検証用50枚の写真で、プレビュー抽出数が実数の±1に収まる割合が80%以上、家具/家電/大型雑貨の主要ラベル正答率が80%以上。
-- AC-2（意図&WBS・FR-3）: move_out_date基準でSELL:-7d / GIVE:-5d / RECYCLE:-3d / TRASH:-2d / KEEP:-1dの期限がReminders締切に反映される。
-- AC-3（UX・FR-4）: プレビューで「全OFF→必要だけON」が1アクションで行え、各アイテムの個別トグルが機能し、デフォルトで小物除外フィルタがONになっている。
-- AC-4（性能・信頼性・FR-5, NFR-1〜3）: 撮影→プレビュー P50 ≤5s/P95 ≤10s、撮影→Reminders P95 ≤30s、エクスポート成功率 ≥95%、失敗時は部分結果表示と再試行案内が提示される。
-- AC-5（プライバシ・Fallback・NFR-5）: 初回にデータ送信の同意UIが表示され、拒否時にはLLMなしのFallbackで汎用タスク（期限=goal-3d）が生成・エクスポート可能。
+## 完成とスコープ境界
+- やる: リモート検出、Intent/WBS、地域プリセット、Reminders登録、Fallback、Telemetry、性能計測。
+- やらない: 複数写真統合、価格推定、家族共有UI、Todoist/Notion連携。
+- 隠し球: legacy_hidden モードはデバッグ設定で有効化可（一般公開は次フェーズ）。
 
-## Assumptions / 前提条件
-- オンボーディングまたは設定でユーザー意図モードが保存済みである。
-- Vision/LLM APIの利用枠がSLO内で確保されている。
-- Reminders権限が取得済みである。
+## スケジュールとマイルストーン
+- MVP仕様確定（本ドキュメント）: 2025-10-01。
+- 実装完了 & QA 開始: 2025-10-21（feature flag `photo_multi_split` ON 環境で検証）。
+- 出荷リハーサル: 2025-10-28。
 
-## Dependencies / 依存関係
-- 物体検出モデル選定およびアプリ同梱またはAPIアクセス。
-- OpenAI等のLLM/APIレイテンシと利用枠。
-- Apple Reminders APIのバッチ制限とフィールド仕様。
+## 指標と SLO
+- 抽出精度: ±1一致率 ≥ 80%。
+- レイテンシ: capture→preview P50 ≤ 5s / P95 ≤ 10s。capture→Reminders P95 ≤ 30s。
+- 信頼性: Reminders export 成功率 ≥ 95%、失敗時はユーザーに再試行ガイダンス提供。
+- プライバシ: 同意がない限り画像は端末外に送信しない。送信時は JPEG 圧縮＋payload 正規化。
 
-## Risks & Mitigations / リスクと軽減策
-- R1: 過分割/誤検出 → 最大8件上限、小物除外、±1許容AC、プレビュー速操作で緩和。
-- R2: レイテンシ増大 → 画像リサイズ、並列処理、LLMタイムアウト8s、部分結果提示。
-- R3: エクスポート失敗 → リトライ処理、失敗ログ収集、キルスイッチで段階停止可能。
-- R4: 同意フローでの離脱 → 初回1画面で完結、後から設定で変更可能にする。
+## 依存関係と前提
+- OpenAI GPT-5 mini Vision API キーと十分なクォータ。
+- Apple Reminders 権限および EKEventStore フルアクセス。
+- IntentSettingsStore による設定永続化（UserDefaults + Keychain）。
+- LocaleGuide/RegionLinks の最新情報更新。
+
+## リスクと軽減策
+- R1: LLM 応答不整合 → JSON schema 強制、正規化後の Telemetry 記録、即座フォールバック。
+- R2: レイテンシ超過 → 画像リサイズ、LLM タイムアウト 8s、capture→preview/perf ログで監視。
+- R3: Reminders API 失敗 → コミット前に一括 save、失敗時 reset()、エラーテレメトリ送信。
+- R4: Intent 設定不足 → 初回アンケート必須化、Settings で随時更新可能。
 
 ## Open Questions / 未解決事項
-- Q1: 同意OFF時のFallbackタスク内容（カテゴリ別テンプレ）はどこまで詳細化するか？
-- Q2: 意図モードごとに小物除外閾値を変動させるか？
+- Q1: `legacy_hidden` モードの UI 表示はデバッグ限定のままで良いか？公開時期を別途決定する必要あり。
+- Q2: スモークテスト 10枚の ground truth 構築方法と担当。
 
 ## References / 参考資料
 - `./.cckiro/specs/spec-driven-development/workflow.md`
@@ -100,4 +102,4 @@ status: Approved
 ## Approval / 承認
 - Reviewer(s): @codex, @po, @qa-lead
 - Decision: Approved
-- Date: 2025-09-15
+- Date: 2025-10-01

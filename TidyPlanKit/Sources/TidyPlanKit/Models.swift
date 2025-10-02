@@ -2,24 +2,19 @@ import Foundation
 
 // MARK: - Core Models
 
-public struct UserLocale: Codable {
-    public let country: String
-    public let city: String
-    
-    public init(country: String, city: String) {
-        self.country = country
-        self.city = city
-    }
+struct UserLocale: Codable {
+    let country: String
+    let city: String
 }
 
-public enum ExitTag: String, CaseIterable, Codable {
+enum ExitTag: String, CaseIterable, Codable {
     case sell = "SELL"
     case give = "GIVE"
     case recycle = "RECYCLE"
     case trash = "TRASH"
     case keep = "KEEP"
     
-    public var displayName: String {
+    var displayName: String {
         switch self {
         case .sell: return "Sell"
         case .give: return "Give"
@@ -29,7 +24,7 @@ public enum ExitTag: String, CaseIterable, Codable {
         }
     }
     
-    public var systemImage: String {
+    var systemImage: String {
         switch self {
         case .sell: return "dollarsign.circle"
         case .give: return "heart.circle"
@@ -40,66 +35,67 @@ public enum ExitTag: String, CaseIterable, Codable {
     }
 }
 
-public struct TidyTask: Codable, Identifiable {
-    public let id: String
-    public let title: String
-    public let area: String?
-    public let exit_tag: ExitTag?
-    public let priority: Int?
-    public let effort_min: Int?
-    public let labels: [String]?
-    public let checklist: [String]?
-    public let links: [String]?
-    public let url: String?
-    public let due_at: String? // ISO8601
-    
-    public init(id: String, title: String, area: String?, exit_tag: ExitTag?, priority: Int?, effort_min: Int?, labels: [String]?, checklist: [String]?, links: [String]?, url: String?, due_at: String?) {
-        self.id = id
-        self.title = title
-        self.area = area
-        self.exit_tag = exit_tag
-        self.priority = priority
-        self.effort_min = effort_min
-        self.labels = labels
-        self.checklist = checklist
-        self.links = links
-        self.url = url
-        self.due_at = due_at
-    }
+struct TidyTask: Codable, Identifiable {
+    let id: String
+    let title: String
+    let note: String?
+    let area: String?
+    let exit_tag: ExitTag?
+    let priority: Int?
+    let effort_min: Int?
+    let labels: [String]?
+    let checklist: [String]?
+    let links: [String]?
+    let url: String?
+    let due_at: String? // ISO8601
     
     // Computed properties
-    public var exitTag: ExitTag { exit_tag ?? .keep }
-    public var effortMinutes: Int { effort_min ?? 15 }
-    public var taskPriority: Int { priority ?? 3 }
-    public var isHighPriority: Bool { taskPriority >= 4 }
-    public var dueDate: Date? {
+    var exitTag: ExitTag {
+        return exit_tag ?? .keep
+    }
+    
+    var effortMinutes: Int {
+        return effort_min ?? 15
+    }
+    
+    var taskPriority: Int {
+        return priority ?? 3
+    }
+    
+    var isHighPriority: Bool {
+        return taskPriority >= 4
+    }
+    
+    var dueDate: Date? {
         guard let due_at = due_at else { return nil }
         return ISO8601DateFormatter().date(from: due_at)
     }
 }
 
-public struct Plan: Codable {
-    public let project: String
-    public let locale: UserLocale
-    public let tasks: [TidyTask]
-    
-    public init(project: String, locale: UserLocale, tasks: [TidyTask]) {
-        self.project = project
-        self.locale = locale
-        self.tasks = tasks
-    }
+struct Plan: Codable {
+    let project: String
+    let locale: UserLocale
+    let tasks: [TidyTask]
 }
 
 // MARK: - Validation Extensions
 
-public extension TidyTask {
-    var isValid: Bool { !id.isEmpty && !title.isEmpty }
-    static func validate(_ tasks: [TidyTask]) -> [TidyTask] { tasks.filter { $0.isValid } }
-}
-
-public extension Plan {
-    func validated() -> Plan {
-        Plan(project: project, locale: locale, tasks: TidyTask.validate(tasks))
+extension TidyTask {
+    var isValid: Bool {
+        return !id.isEmpty && !title.isEmpty
+    }
+    
+    static func validate(_ tasks: [TidyTask]) -> [TidyTask] {
+        return tasks.filter { $0.isValid }
     }
 }
 
+extension Plan {
+    func validated() -> Plan {
+        return Plan(
+            project: project,
+            locale: locale,
+            tasks: TidyTask.validate(tasks)
+        )
+    }
+}

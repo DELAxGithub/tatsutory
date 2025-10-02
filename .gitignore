@@ -91,3 +91,4 @@ iOSInjectionProject/
 
 # Mac
 .DS_Store
+.env

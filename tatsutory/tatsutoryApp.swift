@@ -5,6 +5,7 @@ struct TatsuToriApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
+                .environmentObject(IntentSettingsStore.shared)
         }
     }
 }
@@ -26,18 +27,31 @@ struct MainView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Settings") { viewModel.showingSettings = true }
+                    Button(L10n.key("main.toolbar.settings")) { viewModel.showingSettings = true }
                 }
             }
             .onAppear { viewModel.checkAPIKey() }
-            .sheet(isPresented: $viewModel.showingSettings) { SettingsView() }
+            .sheet(isPresented: $viewModel.showingSettings) {
+                SettingsView()
+                    .environmentObject(IntentSettingsStore.shared)
+            }
             .sheet(isPresented: $viewModel.showingCamera) {
                 CameraView { viewModel.handleCapturedImage($0) }
             }
             .sheet(isPresented: $viewModel.showingPreview) {
-                if let plan = viewModel.generatedPlan {
-                    PlanPreviewView(plan: plan) { viewModel.handlePlanCompletion(success: $0) }
+                if let result = viewModel.generatedPlan {
+                    PlanPreviewView(result: result) { viewModel.handlePlanCompletion(success: $0) }
                 }
+            }
+            .alert(L10n.key("main.alert.consent_title"), isPresented: $viewModel.showingConsentDialog) {
+                Button(L10n.key("main.alert.allow")) {
+                    viewModel.recordConsent(true)
+                }
+                Button(L10n.key("main.alert.deny"), role: .cancel) {
+                    viewModel.recordConsent(false)
+                }
+            } message: {
+                Text(viewModel.consentMessage)
             }
         }
     }
@@ -51,13 +65,13 @@ struct MainView: View {
     private var appInfo: some View {
         VStack(spacing: 8) {
             Text("TatsuTori").font(.largeTitle).fontWeight(.bold)
-            Text("Moving-specific task maker")
+            Text(L10n.key("main.subtitle"))
                 .font(.headline).foregroundColor(.secondary)
         }
     }
     
     private var actionButton: some View {
-        Button("Take Photo") { viewModel.showingCamera = true }
+        Button(L10n.key("main.action.take_photo")) { viewModel.handleTakePhotoTapped() }
             .buttonStyle(.borderedProminent)
             .font(.title2)
     }
@@ -65,7 +79,7 @@ struct MainView: View {
     @ViewBuilder
     private var loadingView: some View {
         if viewModel.isLoading {
-            ProgressView("AI analyzing...")
+            ProgressView(L10n.key("main.progress.analyzing"))
         }
     }
 }

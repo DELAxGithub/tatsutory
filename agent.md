@@ -39,6 +39,14 @@
 - 承認: on-request（重要/外部要件のある操作は承認依頼）
 - 禁止操作例: 破壊的 `rm`、`git commit/push`（ユーザーが要求した場合のみ）
 
+## MCP / Context7
+
+- `.env` と `.env.example` に `CONTEXT7_API_KEY` を追加済み。実キーを設定したらシェルに `export CONTEXT7_API_KEY=...` するか direnv 等で読み込む。
+- `.claude/settings.local.json` で Context7 MCP を `https://mcp.context7.com/mcp` に登録。ヘッダーの `CONTEXT7_API_KEY` は自身のキーに置き換える。
+- 反映には Codex CLI/Claude Code の再起動が必要。起動時に Context7 ツール (`resolve-library-id`, `get-library-docs`) が利用可能になる。
+- Context7 側で API キーをまだ取得していない場合は https://context7.com/sign-in/ から発行する。
+
+
 ## コマンドと読み取り規約
 
 - 検索: `rg` を優先使用（速い）。`rg --files` で一覧

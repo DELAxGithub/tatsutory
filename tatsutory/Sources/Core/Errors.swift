@@ -5,6 +5,7 @@ enum TatsuToriError: LocalizedError {
     case cameraUnavailable
     case remindersAccessDenied
     case networkError(Error)
+    case rateLimited(retryAfter: TimeInterval?)
     case invalidJSON
     case planningFailed
     case reminderSaveFailed(Error)
@@ -12,19 +13,24 @@ enum TatsuToriError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noAPIKey:
-            return "API key not configured. Please add your OpenAI API key in Settings."
+            return L10n.string("errors.no_api_key")
         case .cameraUnavailable:
-            return "Camera is not available on this device."
+            return L10n.string("errors.camera_unavailable")
         case .remindersAccessDenied:
-            return "Reminders access denied. Please allow access in Settings app."
+            return L10n.string("errors.reminders_denied")
         case .networkError(let error):
-            return "Network error: \(error.localizedDescription)"
+            return L10n.string("errors.network", error.localizedDescription)
+        case .rateLimited(let retryAfter):
+            if let retryAfter {
+                return L10n.string("errors.rate_limited_retry", Int(retryAfter))
+            }
+            return L10n.string("errors.rate_limited")
         case .invalidJSON:
-            return "Invalid JSON format received from AI service."
+            return L10n.string("errors.invalid_json")
         case .planningFailed:
-            return "AI planning failed. Using fallback plan."
+            return L10n.string("errors.planning_failed")
         case .reminderSaveFailed(let error):
-            return "Failed to save reminders: \(error.localizedDescription)"
+            return L10n.string("errors.reminder_save_failed", error.localizedDescription)
         }
     }
 }

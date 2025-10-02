@@ -1,55 +1,71 @@
 import Foundation
+import UIKit
 
-public enum TidyPlanError: Error {
-    case planningFailed
-    case networkError(Int)
-    case invalidJSON
-}
-
-public final class OpenAIService {
+class OpenAIService {
     private let apiKey: String
-    private let model = "gpt-4o"
+    private let model = "gpt-5-mini-vision"
     private let timeout: TimeInterval = 30.0
     
-    public init(apiKey: String) {
+    private struct RequestLogMeta {
+        let id = UUID().uuidString
+        let start = Date()
+        let path: String
+        let bodyBytes: Int
+    }
+
+    init(apiKey: String) {
         self.apiKey = apiKey
     }
     
-    public func generatePlan(from imageData: Data, locale: UserLocale) async throws -> Plan {
-        let base64Image = imageData.base64EncodedString()
-        let request = try buildRequest(base64Image: base64Image, locale: locale)
-        let data = try await performRequest(request)
-        return try parsePlanResponse(data)
+    struct Response {
+        let plan: Plan
+        let requestId: String?
+    }
+
+    func generatePlan(from image: UIImage, prompts: (system: String, developer: String, data: String)) async throws -> Response {
+        guard let base64Image = image.toBase64() else {
+            throw TatsuToriError.planningFailed
+        }
+        
+        let request = try buildRequest(base64Image: base64Image, prompts: prompts)
+        let meta = RequestLogMeta(path: request.url?.path ?? "", bodyBytes: request.httpBody?.count ?? 0)
+        logRequest(meta)
+        let (data, requestId) = try await performRequest(request, meta: meta)
+        let plan = try parsePlanResponse(data)
+        return Response(plan: plan, requestId: requestId)
     }
     
-    private func buildRequest(base64Image: String, locale: UserLocale) throws -> URLRequest {
-        let url = URL(string: "https://api.openai.com/v1/chat/completions")!
+    private func buildRequest(base64Image: String, prompts: (system: String, developer: String, data: String)) throws -> URLRequest {
+        let url = URL(string: "https://api.openai.com/v1/responses")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = timeout
         
-        let body = createRequestBody(base64Image: base64Image, locale: locale)
+        let body = createRequestBody(base64Image: base64Image, prompts: prompts)
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
         return request
     }
     
-    private func createRequestBody(base64Image: String, locale: UserLocale) -> [String: Any] {
+    private func createRequestBody(base64Image: String, prompts: (system: String, developer: String, data: String)) -> [String: Any] {
         let messages: [[String: Any]] = [
+            [
+                "role": "system",
+                "content": [["type": "input_text", "text": prompts.system]]
+            ],
+            [
+                "role": "developer",
+                "content": [["type": "input_text", "text": prompts.developer]]
+            ],
             [
                 "role": "user",
                 "content": [
+                    ["type": "input_text", "text": prompts.data],
                     [
-                        "type": "text",
-                        "text": createPrompt(for: locale)
-                    ],
-                    [
-                        "type": "image_url",
-                        "image_url": [
-                            "url": "data:image/jpeg;base64,\(base64Image)"
-                        ]
+                        "type": "input_image",
+                        "image_url": "data:image/jpeg;base64,\(base64Image)"
                     ]
                 ]
             ]
@@ -57,59 +73,138 @@ public final class OpenAIService {
         
         return [
             "model": model,
-            "messages": messages,
-            "response_format": [
-                "type": "json_schema",
-                "json_schema": [
+            "input": messages,
+            "text": [
+                "format": [
+                    "type": "json_schema",
                     "name": "tidy_plan",
                     "schema": TidySchema.jsonSchema
                 ]
             ],
-            "max_tokens": 2000
+            "max_output_tokens": 2000
         ]
     }
     
-    private func performRequest(_ request: URLRequest) async throws -> Data {
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, 200...299 ~= httpResponse.statusCode else {
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-            throw TidyPlanError.networkError(statusCode)
+    private func retryAfterInterval(from response: HTTPURLResponse) -> TimeInterval? {
+        guard let header = response.value(forHTTPHeaderField: "Retry-After") else { return nil }
+        if let seconds = TimeInterval(header) { return seconds }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE',' dd MMM yyyy HH:mm:ss z"
+        if let date = formatter.date(from: header) {
+            return max(0, date.timeIntervalSinceNow)
         }
-        return data
+        return nil
+    }
+    
+    private func logRequest(_ meta: RequestLogMeta) {
+        #if DEBUG
+        print("OPENAI REQ id=\(meta.id) path=\(meta.path) size=\(meta.bodyBytes)B ts=\(meta.start.timeIntervalSince1970)")
+        #endif
+    }
+    
+    private func logResponse(_ meta: RequestLogMeta, response: HTTPURLResponse?, requestId: String?, error: Error?) {
+        #if DEBUG
+        let duration = Int(Date().timeIntervalSince(meta.start) * 1000)
+        let status = response?.statusCode ?? -1
+        print("OPENAI RES id=\(meta.id) status=\(status) reqId=\(requestId ?? "-") dt=\(duration)ms err=\(error.map { "\($0)" } ?? "nil")")
+        #endif
+    }
+    
+    private func performRequest(_ request: URLRequest, meta: RequestLogMeta) async throws -> (Data, String?) {
+        let session = URLSession.shared
+        let result: (Data, URLResponse)
+        do {
+            result = try await session.data(for: request)
+        } catch {
+            logResponse(meta, response: nil, requestId: nil, error: error)
+            throw TatsuToriError.networkError(error)
+        }
+        let (data, response) = result
+        guard let httpResponse = response as? HTTPURLResponse else {
+            logResponse(meta, response: nil, requestId: nil, error: nil)
+            throw TatsuToriError.networkError(NSError(domain: "HTTP", code: -1))
+        }
+        let requestId = httpResponse.value(forHTTPHeaderField: "x-request-id")
+        logResponse(meta, response: httpResponse, requestId: requestId, error: nil)
+        guard 200...299 ~= httpResponse.statusCode else {
+            if httpResponse.statusCode == 429 {
+                let retryAfter = retryAfterInterval(from: httpResponse)
+                throw TatsuToriError.rateLimited(retryAfter: retryAfter)
+            }
+            if let bodyString = String(data: data, encoding: .utf8) {
+                TelemetryTracker.shared.event(
+                    "openai_response_error",
+                    [
+                        "status": "\(httpResponse.statusCode)",
+                        "body": String(bodyString.prefix(512))
+                    ]
+                )
+            }
+            throw TatsuToriError.networkError(NSError(domain: "HTTP", code: httpResponse.statusCode))
+        }
+        return (data, requestId)
     }
     
     private func parsePlanResponse(_ data: Data) throws -> Plan {
-        let openAIResponse = try JSONDecoder().decode(OpenAIResponse.self, from: data)
-        guard let content = openAIResponse.choices.first?.message.content else {
-            throw TidyPlanError.invalidJSON
+        let envelope = try JSONDecoder().decode(OpenAIResponsesEnvelope.self, from: data)
+
+        for output in envelope.outputs {
+            for content in output.content {
+                switch content.type {
+                case .outputJSON:
+                    if let jsonData = content.jsonData() {
+                        let plan = try JSONDecoder().decode(Plan.self, from: jsonData)
+                        guard PlanValidator.isValid(plan) else {
+                            throw TatsuToriError.invalidJSON
+                        }
+                        return plan.validated()
+                    }
+                case .outputText:
+                    if let text = content.text,
+                       let planData = text.data(using: .utf8),
+                       let plan = try? JSONDecoder().decode(Plan.self, from: planData),
+                       PlanValidator.isValid(plan) {
+                        return plan.validated()
+                    }
+                default:
+                    continue
+                }
+            }
         }
-        let planData = content.data(using: .utf8)!
-        let plan = try JSONDecoder().decode(Plan.self, from: planData)
-        return plan.validated()
+
+        throw TatsuToriError.invalidJSON
     }
     
-    private func createPrompt(for locale: UserLocale) -> String {
-        return """
-        You are a move-out concierge. Analyze this photo and create actionable tasks for getting rid of items.
+}
 
-        Rules:
-        - Each task must have an exit_tag: SELL, GIVE, RECYCLE, TRASH, or KEEP
-        - Tasks should be 5-25 minutes each
-        - Include specific steps in checklist
-        - Add relevant links for \(locale.city), \(locale.country)
-        - Priority 1-4 (4=urgent)
-        - Set realistic due dates
+// MARK: - Plan Validation Helpers
 
-        Focus on what needs to go, not what to organize. Return JSON only.
-        """
+enum PlanValidator {
+    static func isValid(_ plan: Plan) -> Bool {
+        plan.tasks.allSatisfy { task in
+            !task.id.isEmpty && !task.title.isEmpty
+        }
     }
 }
 
-// MARK: - OpenAI Response Models
+private extension UIImage {
+    func toBase64(maxDimension: CGFloat = 1024, quality: CGFloat = 0.7) -> String? {
+        guard let scaled = resizedIfNeeded(maxDimension: maxDimension),
+              let data = scaled.jpegData(compressionQuality: quality) else {
+            return nil
+        }
+        return data.base64EncodedString()
+    }
 
-private struct OpenAIResponse: Codable {
-    let choices: [Choice]
-    struct Choice: Codable { let message: Message }
-    struct Message: Codable { let content: String }
+    private func resizedIfNeeded(maxDimension: CGFloat) -> UIImage? {
+        let longestSide = max(size.width, size.height)
+        guard longestSide > maxDimension else { return self }
+        let scale = maxDimension / longestSide
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        UIGraphicsBeginImageContextWithOptions(newSize, true, 1.0)
+        defer { UIGraphicsEndImageContext() }
+        draw(in: CGRect(origin: .zero, size: newSize))
+        return UIGraphicsGetImageFromCurrentImageContext()
+    }
 }
-
