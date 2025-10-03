@@ -72,30 +72,98 @@ struct SettingsView: View {
     }
 
     private var miniSurveySection: some View {
-        Section(L10n.key("settings.purpose.header")) {
-            Picker("", selection: binding(\.purpose)) {
-                Text(L10n.key("settings.purpose.move_fast")).tag(Purpose.move_fast)
-                Text(L10n.key("settings.purpose.move_value")).tag(Purpose.move_value)
-                Text(L10n.key("settings.purpose.cleanup")).tag(Purpose.cleanup)
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(L10n.key("settings.purpose.header"))
+                    .font(.headline)
+
+                ForEach([Purpose.move_fast, Purpose.move_value, Purpose.cleanup], id: \.self) { purpose in
+                    Button(action: {
+                        store.update { $0.purpose = purpose }
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(L10n.key(purposeTitleKey(purpose)))
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                Text(L10n.key(purposeDescriptionKey(purpose)))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer()
+                            if store.value.purpose == purpose {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 if legacyUnlocked || store.value.purpose == .legacy_hidden {
-                    Text(L10n.key("settings.purpose.legacy")).tag(Purpose.legacy_hidden)
+                    Button(action: {
+                        store.update { $0.purpose = .legacy_hidden }
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(L10n.key("settings.purpose.legacy"))
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                Text(L10n.key("settings.purpose.legacy_description"))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer()
+                            if store.value.purpose == .legacy_hidden {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .pickerStyle(.segmented)
-            Text(L10n.key("settings.purpose.caption"))
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
     }
 
     private var regionSection: some View {
-        Section(L10n.key("settings.region.header")) {
-            Picker("", selection: binding(\.region)) {
-                Text(L10n.key("settings.region.jp")).tag("JP")
-                Text(L10n.key("settings.region.ca_to")).tag("CA-TO")
-                Text(L10n.key("settings.region.other")).tag("OTHER")
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(L10n.key("settings.region.header"))
+                    .font(.headline)
+
+                ForEach(["JP", "CA-TO", "OTHER"], id: \.self) { region in
+                    Button(action: {
+                        store.update { $0.region = region }
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(L10n.key(regionTitleKey(region)))
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                Text(L10n.key(regionDescriptionKey(region)))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer()
+                            if store.value.region == region {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                DatePicker(L10n.key("settings.goal_date.label"), selection: bindingDate(\.goalDateISO), displayedComponents: .date)
+                    .padding(.top, 8)
             }
-            DatePicker(L10n.key("settings.goal_date.label"), selection: bindingDate(\.goalDateISO), displayedComponents: .date)
         }
     }
 
@@ -276,6 +344,40 @@ struct SettingsView: View {
         aboutTapCount += 1
         if aboutTapCount >= 5 {
             legacyUnlocked = true
+        }
+    }
+
+    private func purposeTitleKey(_ purpose: Purpose) -> String {
+        switch purpose {
+        case .move_fast: return "settings.purpose.move_fast"
+        case .move_value: return "settings.purpose.move_value"
+        case .cleanup: return "settings.purpose.cleanup"
+        case .legacy_hidden: return "settings.purpose.legacy"
+        }
+    }
+
+    private func purposeDescriptionKey(_ purpose: Purpose) -> String {
+        switch purpose {
+        case .move_fast: return "settings.purpose.move_fast_description"
+        case .move_value: return "settings.purpose.move_value_description"
+        case .cleanup: return "settings.purpose.cleanup_description"
+        case .legacy_hidden: return "settings.purpose.legacy_description"
+        }
+    }
+
+    private func regionTitleKey(_ region: String) -> String {
+        switch region {
+        case "JP": return "settings.region.jp"
+        case "CA-TO": return "settings.region.ca_to"
+        default: return "settings.region.other"
+        }
+    }
+
+    private func regionDescriptionKey(_ region: String) -> String {
+        switch region {
+        case "JP": return "settings.region.jp_description"
+        case "CA-TO": return "settings.region.ca_to_description"
+        default: return "settings.region.other_description"
         }
     }
 

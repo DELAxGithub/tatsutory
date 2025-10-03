@@ -3,9 +3,9 @@ import UIKit
 
 class OpenAIService {
     private let apiKey: String
-    private let model = "gpt-5-mini-vision"
-    private let timeout: TimeInterval = 30.0
-    
+    private let model = "gpt-5-mini"
+    private let timeout: TimeInterval = 45.0
+
     private struct RequestLogMeta {
         let id = UUID().uuidString
         let start = Date()
@@ -16,75 +16,101 @@ class OpenAIService {
     init(apiKey: String) {
         self.apiKey = apiKey
     }
-    
+
+    struct TaskPlanResponse: Codable {
+        let tasks: [TaskItem]
+
+        struct TaskItem: Codable {
+            let id: String
+            let title: String
+            let category: String?
+            let exitTag: String
+            let dueDate: String
+            let checklist: [String]?
+            let tips: String?
+            let links: [String]?
+            let estimatedMinutes: Int?
+            let note: String?
+        }
+    }
+
     struct Response {
-        let plan: Plan
+        let tasks: [TidyTask]
         let requestId: String?
     }
 
-    func generatePlan(from image: UIImage, prompts: (system: String, developer: String, data: String)) async throws -> Response {
-        guard let base64Image = image.toBase64() else {
-            throw TatsuToriError.planningFailed
-        }
-        
-        let request = try buildRequest(base64Image: base64Image, prompts: prompts)
+    func generateTasks(from items: [DetectedItem],
+                       settings: IntentSettings,
+                       locale: UserLocale) async throws -> Response {
+        let prompts = PromptBuilder.build(items: items, settings: settings, locale: locale)
+        let request = try buildRequest(prompts: prompts, itemCount: items.count)
         let meta = RequestLogMeta(path: request.url?.path ?? "", bodyBytes: request.httpBody?.count ?? 0)
         logRequest(meta)
         let (data, requestId) = try await performRequest(request, meta: meta)
-        let plan = try parsePlanResponse(data)
-        return Response(plan: plan, requestId: requestId)
+        let tasks = try parseTaskResponse(data, items: items, locale: locale)
+        return Response(tasks: tasks, requestId: requestId)
     }
-    
-    private func buildRequest(base64Image: String, prompts: (system: String, developer: String, data: String)) throws -> URLRequest {
+
+    private func buildRequest(prompts: (system: String, user: String), itemCount: Int) throws -> URLRequest {
         let url = URL(string: "https://api.openai.com/v1/responses")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = timeout
-        
-        let body = createRequestBody(base64Image: base64Image, prompts: prompts)
+
+        let body = createRequestBody(prompts: prompts, itemCount: itemCount)
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        
+
         return request
     }
-    
-    private func createRequestBody(base64Image: String, prompts: (system: String, developer: String, data: String)) -> [String: Any] {
+
+    private func createRequestBody(prompts: (system: String, user: String), itemCount: Int) -> [String: Any] {
         let messages: [[String: Any]] = [
             [
                 "role": "system",
                 "content": [["type": "input_text", "text": prompts.system]]
             ],
             [
-                "role": "developer",
-                "content": [["type": "input_text", "text": prompts.developer]]
-            ],
-            [
                 "role": "user",
-                "content": [
-                    ["type": "input_text", "text": prompts.data],
-                    [
-                        "type": "input_image",
-                        "image_url": "data:image/jpeg;base64,\(base64Image)"
-                    ]
-                ]
+                "content": [["type": "input_text", "text": prompts.user]]
             ]
         ]
-        
+
+        let schemaDict = parseJSONSchema(PromptBuilder.schema(for: itemCount))
+
+        #if DEBUG
+        // Log schema to verify minItems/maxItems are set correctly
+        if let schemaData = try? JSONSerialization.data(withJSONObject: schemaDict, options: .prettyPrinted),
+           let schemaString = String(data: schemaData, encoding: .utf8) {
+            print("📋 SCHEMA (itemCount=\(itemCount)):")
+            print(schemaString.prefix(1000))
+        }
+        #endif
+
         return [
             "model": model,
             "input": messages,
             "text": [
                 "format": [
                     "type": "json_schema",
-                    "name": "tidy_plan",
-                    "schema": TidySchema.jsonSchema
+                    "name": "task_plan",
+                    "schema": schemaDict
                 ]
             ],
-            "max_output_tokens": 2000
+            "max_output_tokens": 2500,
+            "reasoning": ["effort": "low"]
         ]
     }
-    
+
+    private func parseJSONSchema(_ schemaString: String) -> [String: Any] {
+        guard let data = schemaString.data(using: .utf8),
+              let schema = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return [:]
+        }
+        return schema
+    }
+
     private func retryAfterInterval(from response: HTTPURLResponse) -> TimeInterval? {
         guard let header = response.value(forHTTPHeaderField: "Retry-After") else { return nil }
         if let seconds = TimeInterval(header) { return seconds }
@@ -96,13 +122,13 @@ class OpenAIService {
         }
         return nil
     }
-    
+
     private func logRequest(_ meta: RequestLogMeta) {
         #if DEBUG
         print("OPENAI REQ id=\(meta.id) path=\(meta.path) size=\(meta.bodyBytes)B ts=\(meta.start.timeIntervalSince1970)")
         #endif
     }
-    
+
     private func logResponse(_ meta: RequestLogMeta, response: HTTPURLResponse?, requestId: String?, error: Error?) {
         #if DEBUG
         let duration = Int(Date().timeIntervalSince(meta.start) * 1000)
@@ -110,7 +136,7 @@ class OpenAIService {
         print("OPENAI RES id=\(meta.id) status=\(status) reqId=\(requestId ?? "-") dt=\(duration)ms err=\(error.map { "\($0)" } ?? "nil")")
         #endif
     }
-    
+
     private func performRequest(_ request: URLRequest, meta: RequestLogMeta) async throws -> (Data, String?) {
         let session = URLSession.shared
         let result: (Data, URLResponse)
@@ -118,17 +144,20 @@ class OpenAIService {
             result = try await session.data(for: request)
         } catch {
             logResponse(meta, response: nil, requestId: nil, error: error)
+            TelemetryTracker.shared.event("ai_enrichment_attempt", ["status": "network_error"])
             throw TatsuToriError.networkError(error)
         }
         let (data, response) = result
         guard let httpResponse = response as? HTTPURLResponse else {
             logResponse(meta, response: nil, requestId: nil, error: nil)
+            TelemetryTracker.shared.event("ai_enrichment_attempt", ["status": "invalid_response"])
             throw TatsuToriError.networkError(NSError(domain: "HTTP", code: -1))
         }
         let requestId = httpResponse.value(forHTTPHeaderField: "x-request-id")
         logResponse(meta, response: httpResponse, requestId: requestId, error: nil)
         guard 200...299 ~= httpResponse.statusCode else {
             if httpResponse.statusCode == 429 {
+                TelemetryTracker.shared.event("ai_enrichment_rate_limited", [:])
                 let retryAfter = retryAfterInterval(from: httpResponse)
                 throw TatsuToriError.rateLimited(retryAfter: retryAfter)
             }
@@ -141,33 +170,58 @@ class OpenAIService {
                     ]
                 )
             }
+            TelemetryTracker.shared.event("ai_enrichment_attempt", ["status": "http_\(httpResponse.statusCode)"])
             throw TatsuToriError.networkError(NSError(domain: "HTTP", code: httpResponse.statusCode))
         }
+        TelemetryTracker.shared.event("ai_enrichment_success", [:])
         return (data, requestId)
     }
-    
-    private func parsePlanResponse(_ data: Data) throws -> Plan {
+
+    private func parseTaskResponse(_ data: Data, items: [DetectedItem], locale: UserLocale) throws -> [TidyTask] {
         let envelope = try JSONDecoder().decode(OpenAIResponsesEnvelope.self, from: data)
         var fallbackTexts: [String] = []
         var unhandledTypes = Set<String>()
 
+        #if DEBUG
+        print("🔍 PARSING RESPONSE: \(envelope.outputs.count) outputs")
+        #endif
+
         for output in envelope.outputs {
+            #if DEBUG
+            print("🔍 OUTPUT: \(output.content.count) content items")
+            #endif
+
             for content in output.content {
+                #if DEBUG
+                print("🔍 CONTENT TYPE: \(content.type.identifier)")
+                #endif
+
                 switch content.type {
                 case .outputJSON:
+                    #if DEBUG
+                    if let jsonData = content.jsonData(),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        print("📦 JSON CONTENT:")
+                        print(jsonString.prefix(2000))
+                    }
+                    #endif
+
                     if let jsonData = content.jsonData() {
-                        let plan = try JSONDecoder().decode(Plan.self, from: jsonData)
-                        guard PlanValidator.isValid(plan) else {
-                            throw TatsuToriError.invalidJSON
-                        }
-                        return plan.validated()
+                        let response = try JSONDecoder().decode(TaskPlanResponse.self, from: jsonData)
+                        return convertToTidyTasks(response.tasks, locale: locale)
                     }
                 case .outputText:
+                    #if DEBUG
+                    if let text = content.text {
+                        print("📝 TEXT CONTENT:")
+                        print(text.prefix(2000))
+                    }
+                    #endif
+
                     if let text = content.text,
                        let planData = text.data(using: .utf8),
-                       let plan = try? JSONDecoder().decode(Plan.self, from: planData),
-                       PlanValidator.isValid(plan) {
-                        return plan.validated()
+                       let response = try? JSONDecoder().decode(TaskPlanResponse.self, from: planData) {
+                        return convertToTidyTasks(response.tasks, locale: locale)
                     } else if let text = content.text {
                         fallbackTexts.append(text)
                     }
@@ -180,7 +234,7 @@ class OpenAIService {
         if !unhandledTypes.isEmpty {
             TelemetryTracker.shared.event(
                 "openai_content_unhandled",
-                ["types": unhandledTypes.sorted().joined(separator: ","), "route": "planner"]
+                ["types": unhandledTypes.sorted().joined(separator: ","), "route": "task_planner"]
             )
         }
 
@@ -191,38 +245,43 @@ class OpenAIService {
             )
         }
 
+        TelemetryTracker.shared.event("ai_enrichment_attempt", ["status": "parse_failed"])
         throw TatsuToriError.invalidJSON
     }
-    
-}
 
-// MARK: - Plan Validation Helpers
+    private func convertToTidyTasks(_ taskItems: [TaskPlanResponse.TaskItem], locale: UserLocale) -> [TidyTask] {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime]
 
-enum PlanValidator {
-    static func isValid(_ plan: Plan) -> Bool {
-        plan.tasks.allSatisfy { task in
-            !task.id.isEmpty && !task.title.isEmpty
+        var validTasks: [TidyTask] = []
+        for item in taskItems {
+            guard let exitTag = ExitTag(rawValue: item.exitTag) else {
+                continue
+            }
+
+            // Validate date format
+            if isoFormatter.date(from: item.dueDate) == nil {
+                continue
+            }
+
+            let task = TidyTask(
+                id: item.id,
+                title: item.title,
+                category: item.category,
+                note: item.note,
+                tips: item.tips,
+                area: nil,
+                exit_tag: exitTag,
+                priority: nil,
+                effort_min: item.estimatedMinutes,
+                labels: nil,
+                checklist: item.checklist,
+                links: item.links,
+                url: item.links?.first,
+                due_at: item.dueDate
+            )
+            validTasks.append(task)
         }
-    }
-}
-
-private extension UIImage {
-    func toBase64(maxDimension: CGFloat = 1024, quality: CGFloat = 0.7) -> String? {
-        guard let scaled = resizedIfNeeded(maxDimension: maxDimension),
-              let data = scaled.jpegData(compressionQuality: quality) else {
-            return nil
-        }
-        return data.base64EncodedString()
-    }
-
-    private func resizedIfNeeded(maxDimension: CGFloat) -> UIImage? {
-        let longestSide = max(size.width, size.height)
-        guard longestSide > maxDimension else { return self }
-        let scale = maxDimension / longestSide
-        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
-        UIGraphicsBeginImageContextWithOptions(newSize, true, 1.0)
-        defer { UIGraphicsEndImageContext() }
-        draw(in: CGRect(origin: .zero, size: newSize))
-        return UIGraphicsGetImageFromCurrentImageContext()
+        return validTasks
     }
 }

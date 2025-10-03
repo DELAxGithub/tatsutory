@@ -19,7 +19,9 @@ struct FallbackPlanner {
         return TidyTask(
             id: "FB01",
             title: "Sell large electronics (TV, etc.)",
+            category: nil,
             note: nil,
+            tips: nil,
             area: "living",
             exit_tag: .sell,
             priority: 4,
@@ -36,12 +38,14 @@ struct FallbackPlanner {
             due_at: DateHelper.futureDate(days: 3)
         )
     }
-    
+
     private static func createRecycleTask() -> TidyTask {
         return TidyTask(
             id: "RC01",
             title: "Bundle cables for e-waste drop-off",
+            category: nil,
             note: nil,
+            tips: nil,
             area: "electronics",
             exit_tag: .recycle,
             priority: 2,
@@ -57,12 +61,14 @@ struct FallbackPlanner {
             due_at: DateHelper.futureDate(days: 7)
         )
     }
-    
+
     private static func createGiveTask() -> TidyTask {
         return TidyTask(
             id: "GV01",
             title: "Give away books and magazines",
+            category: nil,
             note: nil,
+            tips: nil,
             area: "books",
             exit_tag: .give,
             priority: 2,
