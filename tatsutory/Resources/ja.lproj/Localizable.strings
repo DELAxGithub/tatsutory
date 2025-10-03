@@ -65,6 +65,7 @@
 "main.toolbar.settings" = "設定";
 "main.subtitle" = "引っ越し特化のタスク作成ツール";
 "main.action.take_photo" = "写真を撮る";
+"main.action.choose_photo" = "ギャラリーから選択";
 "main.progress.analyzing" = "AI解析中...";
 "main.progress.analyzing_photo" = "写真を分析中...";
 "main.progress.generating_tasks" = "タスクを生成中...";

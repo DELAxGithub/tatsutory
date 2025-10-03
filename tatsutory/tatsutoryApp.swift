@@ -38,6 +38,11 @@ struct MainView: View {
             .sheet(isPresented: $viewModel.showingCamera) {
                 CameraView { viewModel.handleCapturedImage($0) }
             }
+            .sheet(isPresented: $viewModel.showingPhotoPicker) {
+                PhotoPickerView { image, assetID in
+                    viewModel.handlePickerImage(image, assetID: assetID)
+                }
+            }
             .sheet(isPresented: $viewModel.showingPreview) {
                 if let result = viewModel.generatedPlan {
                     PlanPreviewView(result: result) { viewModel.handlePlanCompletion(success: $0) }
@@ -71,9 +76,19 @@ struct MainView: View {
     }
     
     private var actionButton: some View {
-        Button(L10n.key("main.action.take_photo")) { viewModel.handleTakePhotoTapped() }
+        VStack(spacing: 16) {
+            Button(L10n.key("main.action.take_photo")) {
+                viewModel.handleTakePhotoTapped()
+            }
             .buttonStyle(.borderedProminent)
             .font(.title2)
+
+            Button(L10n.key("main.action.choose_photo")) {
+                viewModel.showingPhotoPicker = true
+            }
+            .buttonStyle(.bordered)
+            .font(.title3)
+        }
     }
     
     @ViewBuilder

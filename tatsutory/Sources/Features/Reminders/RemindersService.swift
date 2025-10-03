@@ -1,8 +1,10 @@
 import Foundation
 import EventKit
+import Photos
 
 class RemindersService {
     private let eventStore = EKEventStore()
+    private let galleryService = PhotoGalleryService()
     
     func requestAccess() async throws {
         if #available(iOS 17, *) {
@@ -50,7 +52,7 @@ class RemindersService {
         var importedCount = 0
         do {
             for task in tasks {
-                let reminder = try buildReminder(from: task, calendar: calendar)
+                let reminder = try await buildReminder(from: task, calendar: calendar)
                 try eventStore.save(reminder, commit: false)
                 importedCount += 1
             }
@@ -62,17 +64,51 @@ class RemindersService {
         }
     }
 
-    private func buildReminder(from task: TidyTask, calendar: EKCalendar) throws -> EKReminder {
+    private func buildReminder(from task: TidyTask, calendar: EKCalendar) async throws -> EKReminder {
         let reminder = EKReminder(eventStore: eventStore)
         reminder.calendar = calendar
         reminder.title = sanitizeTitle(task.title)
-        reminder.notes = composeNotes(primary: task.note, checklist: task.checklist, links: task.links)
+        reminder.notes = composeNotes(primary: task.note, checklist: task.checklist, links: task.links, tips: task.tips)
 
         if let dueDate = task.dueDate {
             reminder.dueDateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: dueDate)
         }
 
         reminder.url = firstValidURL(from: task.links)
+
+        // TODO: Add tags when EKReminder.tags API becomes available
+        // Note: tags API requires iOS 15+ but seems to have compilation issues
+        // For now, we add tag information to notes instead
+        var tagInfo: [String] = []
+        if let exitTag = task.exit_tag {
+            tagInfo.append("#\(exitTag.rawValue)")
+        }
+        if let category = task.category {
+            tagInfo.append("#\(category)")
+        }
+        tagInfo.append("#TatsuTori")
+
+        if !tagInfo.isEmpty {
+            let tagString = tagInfo.joined(separator: " ")
+            if let notes = reminder.notes {
+                reminder.notes = notes + "\n\n" + tagString
+            } else {
+                reminder.notes = tagString
+            }
+        }
+
+        // Note: EKReminder doesn't support direct photo attachments
+        // Photo is saved in gallery and can be accessed via Photos app
+        // We store the asset ID in notes for reference if needed
+        if let photoAssetID = task.photoAssetID {
+            if var notes = reminder.notes {
+                notes += "\n\n📷 Photo ID: \(photoAssetID)"
+                reminder.notes = notes
+            } else {
+                reminder.notes = "📷 Photo ID: \(photoAssetID)"
+            }
+        }
+
         return reminder
     }
 
@@ -82,19 +118,27 @@ class RemindersService {
         return String(trimmed.prefix(120))
     }
 
-    private func composeNotes(primary: String?, checklist: [String]?, links: [String]?) -> String? {
+    private func composeNotes(primary: String?, checklist: [String]?, links: [String]?, tips: String?) -> String? {
         var sections: [String] = []
 
+        // Main note
         if let main = sanitizeLine(primary) {
             sections.append(main)
         }
 
+        // Tips section
+        if let tipsText = sanitizeLine(tips) {
+            sections.append("💡 " + tipsText)
+        }
+
+        // Checklist
         let checklistItems = sanitizeList(checklist)
         if !checklistItems.isEmpty {
             let lines = [L10n.string("reminders.section.checklist")] + checklistItems.map { "- \($0)" }
             sections.append(lines.joined(separator: "\n"))
         }
 
+        // Links
         let linkItems = sanitizeList(links)
         if !linkItems.isEmpty {
             let lines = [L10n.string("reminders.section.links")] + linkItems.map { "- \($0)" }

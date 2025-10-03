@@ -278,7 +278,8 @@ class OpenAIService {
                 checklist: item.checklist,
                 links: item.links,
                 url: item.links?.first,
-                due_at: dueAtISO
+                due_at: dueAtISO,
+                photoAssetID: nil
             )
             validTasks.append(task)
         }

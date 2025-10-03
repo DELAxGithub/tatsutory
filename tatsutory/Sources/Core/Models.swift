@@ -50,7 +50,8 @@ struct TidyTask: Codable, Identifiable {
     let links: [String]?
     let url: String?
     let due_at: String? // ISO8601
-    
+    let photoAssetID: String? // PHAsset identifier for photo attachment
+
     // Computed properties
     var exitTag: ExitTag {
         return exit_tag ?? .keep

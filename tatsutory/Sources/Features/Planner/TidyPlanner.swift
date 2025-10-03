@@ -14,7 +14,7 @@ class TidyPlanner {
         self.splitService = splitService
     }
 
-    func generate(from image: UIImage, allowNetwork: Bool, onProgress: ProgressCallback? = nil) async -> PlanResult {
+    func generate(from image: UIImage, allowNetwork: Bool, photoAssetID: String? = nil, onProgress: ProgressCallback? = nil) async -> PlanResult {
         let settings = settingsStore.value
         let locale = Self.locale(for: settings.region)
 
@@ -33,7 +33,7 @@ class TidyPlanner {
         // If no items detected, return minimal fallback
         guard !filteredItems.isEmpty else {
             TelemetryTracker.shared.trackAIEnrichmentSkip(reason: .noDetectedItems)
-            let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: 0)
+            let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: 0, photoAssetID: photoAssetID)
             return PlanResult(plan: fallback, source: .local, notice: detectionNotice)
         }
 
@@ -54,7 +54,7 @@ class TidyPlanner {
                 TelemetryTracker.shared.trackAIEnrichmentSkip(reason: .networkDisallowed)
             }
 
-            let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: filteredItems.count)
+            let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: filteredItems.count, photoAssetID: photoAssetID)
             return PlanResult(plan: fallback, source: .local, notice: detectionNotice)
         }
 
@@ -73,10 +73,30 @@ class TidyPlanner {
 
             switch result {
             case .success(let tasks, let requestId):
+                // Add photoAssetID to all LLM-generated tasks
+                let tasksWithPhoto = tasks.map { task in
+                    TidyTask(
+                        id: task.id,
+                        title: task.title,
+                        category: task.category,
+                        note: task.note,
+                        tips: task.tips,
+                        area: task.area,
+                        exit_tag: task.exit_tag,
+                        priority: task.priority,
+                        effort_min: task.effort_min,
+                        labels: task.labels,
+                        checklist: task.checklist,
+                        links: task.links,
+                        url: task.url,
+                        due_at: task.due_at,
+                        photoAssetID: photoAssetID
+                    )
+                }
                 let plan = Plan(
                     project: L10n.string("plan.project_name"),
                     locale: locale,
-                    tasks: tasks
+                    tasks: tasksWithPhoto
                 ).validated()
                 return PlanResult(
                     plan: plan,
@@ -85,16 +105,16 @@ class TidyPlanner {
                 )
 
             case .rateLimited:
-                let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: filteredItems.count)
+                let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: filteredItems.count, photoAssetID: photoAssetID)
                 return PlanResult(plan: fallback, source: .rateLimited, notice: detectionNotice)
 
             case .failed:
-                let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: filteredItems.count)
+                let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: filteredItems.count, photoAssetID: photoAssetID)
                 return PlanResult(plan: fallback, source: .local, notice: detectionNotice)
             }
         } catch {
             print("TidyPlanner: LLM generation failed: \(error)")
-            let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: filteredItems.count)
+            let fallback = TaskComposer.fallbackPlan(settings: settings, locale: locale, itemCount: filteredItems.count, photoAssetID: photoAssetID)
             return PlanResult(plan: fallback, source: .local, notice: detectionNotice)
         }
     }

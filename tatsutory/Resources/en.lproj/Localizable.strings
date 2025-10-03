@@ -65,6 +65,7 @@
 "main.toolbar.settings" = "Settings";
 "main.subtitle" = "Moving-specific task maker";
 "main.action.take_photo" = "Take Photo";
+"main.action.choose_photo" = "Choose from Gallery";
 "main.progress.analyzing" = "AI analyzing...";
 "main.progress.analyzing_photo" = "Analyzing photo...";
 "main.progress.generating_tasks" = "Generating tasks...";

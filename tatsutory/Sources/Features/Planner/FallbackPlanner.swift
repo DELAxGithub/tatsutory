@@ -35,7 +35,8 @@ struct FallbackPlanner {
             ],
             links: ["https://www.facebook.com/marketplace/"],
             url: "https://www.facebook.com/marketplace/",
-            due_at: DateHelper.futureDate(days: 3)
+            due_at: DateHelper.futureDate(days: 3),
+            photoAssetID: nil
         )
     }
 
@@ -58,7 +59,8 @@ struct FallbackPlanner {
             ],
             links: ["https://www.toronto.ca/services-payments/recycling-organics-garbage/waste-wizard/"],
             url: nil,
-            due_at: DateHelper.futureDate(days: 7)
+            due_at: DateHelper.futureDate(days: 7),
+            photoAssetID: nil
         )
     }
 
@@ -81,7 +83,8 @@ struct FallbackPlanner {
             ],
             links: ["https://www.facebook.com/groups/"],
             url: nil,
-            due_at: DateHelper.futureDate(days: 5)
+            due_at: DateHelper.futureDate(days: 5),
+            photoAssetID: nil
         )
     }
 }

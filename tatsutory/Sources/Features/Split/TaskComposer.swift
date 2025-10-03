@@ -9,7 +9,7 @@ struct TaskComposer {
     }()
 
     /// Create a single fallback task when all else fails
-    static func fallbackTask(settings: IntentSettings, locale: UserLocale, itemCount: Int = 0) -> TidyTask {
+    static func fallbackTask(settings: IntentSettings, locale: UserLocale, itemCount: Int = 0, photoAssetID: String? = nil) -> TidyTask {
         let goalDate = isoFormatter.date(from: settings.goalDateISO) ?? Date()
         let fallbackDate = Calendar.current.date(byAdding: .day, value: -3, to: goalDate) ?? goalDate
 
@@ -49,13 +49,14 @@ struct TaskComposer {
             checklist: checklist,
             links: [],
             url: nil,
-            due_at: isoFormatter.string(from: fallbackDate)
+            due_at: isoFormatter.string(from: fallbackDate),
+            photoAssetID: photoAssetID
         )
     }
 
     /// Create fallback plan when LLM completely fails
-    static func fallbackPlan(settings: IntentSettings, locale: UserLocale, itemCount: Int = 0) -> Plan {
-        let task = fallbackTask(settings: settings, locale: locale, itemCount: itemCount)
+    static func fallbackPlan(settings: IntentSettings, locale: UserLocale, itemCount: Int = 0, photoAssetID: String? = nil) -> Plan {
+        let task = fallbackTask(settings: settings, locale: locale, itemCount: itemCount, photoAssetID: photoAssetID)
 
         let systemLanguage = Locale.preferredLanguages.first ?? "en"
         let isJapanese = locale.country.uppercased() == "JP" || systemLanguage.hasPrefix("ja")
