@@ -66,6 +66,8 @@
 "main.subtitle" = "引っ越し特化のタスク作成ツール";
 "main.action.take_photo" = "写真を撮る";
 "main.progress.analyzing" = "AI解析中...";
+"main.progress.analyzing_photo" = "写真を分析中...";
+"main.progress.generating_tasks" = "タスクを生成中...";
 "main.alert.consent_title" = "データ送信の確認";
 "main.alert.allow" = "送信を許可";
 "main.alert.deny" = "端末内のみ";

@@ -66,6 +66,8 @@
 "main.subtitle" = "Moving-specific task maker";
 "main.action.take_photo" = "Take Photo";
 "main.progress.analyzing" = "AI analyzing...";
+"main.progress.analyzing_photo" = "Analyzing photo...";
+"main.progress.generating_tasks" = "Generating tasks...";
 "main.alert.consent_title" = "Confirm Photo Upload";
 "main.alert.allow" = "Allow upload";
 "main.alert.deny" = "On-device only";

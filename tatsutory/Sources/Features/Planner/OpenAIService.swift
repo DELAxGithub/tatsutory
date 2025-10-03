@@ -25,7 +25,6 @@ class OpenAIService {
             let title: String
             let category: String?
             let exitTag: String
-            let dueDate: String
             let checklist: [String]?
             let tips: String?
             let links: [String]?
@@ -47,7 +46,7 @@ class OpenAIService {
         let meta = RequestLogMeta(path: request.url?.path ?? "", bodyBytes: request.httpBody?.count ?? 0)
         logRequest(meta)
         let (data, requestId) = try await performRequest(request, meta: meta)
-        let tasks = try parseTaskResponse(data, items: items, locale: locale)
+        let tasks = try parseTaskResponse(data, settings: settings, locale: locale)
         return Response(tasks: tasks, requestId: requestId)
     }
 
@@ -177,7 +176,7 @@ class OpenAIService {
         return (data, requestId)
     }
 
-    private func parseTaskResponse(_ data: Data, items: [DetectedItem], locale: UserLocale) throws -> [TidyTask] {
+    private func parseTaskResponse(_ data: Data, settings: IntentSettings, locale: UserLocale) throws -> [TidyTask] {
         let envelope = try JSONDecoder().decode(OpenAIResponsesEnvelope.self, from: data)
         var fallbackTexts: [String] = []
         var unhandledTypes = Set<String>()
@@ -208,7 +207,7 @@ class OpenAIService {
 
                     if let jsonData = content.jsonData() {
                         let response = try JSONDecoder().decode(TaskPlanResponse.self, from: jsonData)
-                        return convertToTidyTasks(response.tasks, locale: locale)
+                        return convertToTidyTasks(response.tasks, settings: settings, locale: locale)
                     }
                 case .outputText:
                     #if DEBUG
@@ -221,7 +220,7 @@ class OpenAIService {
                     if let text = content.text,
                        let planData = text.data(using: .utf8),
                        let response = try? JSONDecoder().decode(TaskPlanResponse.self, from: planData) {
-                        return convertToTidyTasks(response.tasks, locale: locale)
+                        return convertToTidyTasks(response.tasks, settings: settings, locale: locale)
                     } else if let text = content.text {
                         fallbackTexts.append(text)
                     }
@@ -249,9 +248,10 @@ class OpenAIService {
         throw TatsuToriError.invalidJSON
     }
 
-    private func convertToTidyTasks(_ taskItems: [TaskPlanResponse.TaskItem], locale: UserLocale) -> [TidyTask] {
+    private func convertToTidyTasks(_ taskItems: [TaskPlanResponse.TaskItem], settings: IntentSettings, locale: UserLocale) -> [TidyTask] {
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime]
+        let goalDate = isoFormatter.date(from: settings.goalDateISO) ?? Date()
 
         var validTasks: [TidyTask] = []
         for item in taskItems {
@@ -259,10 +259,10 @@ class OpenAIService {
                 continue
             }
 
-            // Validate date format
-            if isoFormatter.date(from: item.dueDate) == nil {
-                continue
-            }
+            // Calculate due date based on goalDate and exitTag offset
+            let offset = DueDateHelper.offset(for: exitTag)
+            let dueDate = Calendar.current.date(byAdding: .day, value: offset, to: goalDate) ?? goalDate
+            let dueAtISO = isoFormatter.string(from: dueDate)
 
             let task = TidyTask(
                 id: item.id,
@@ -278,10 +278,23 @@ class OpenAIService {
                 checklist: item.checklist,
                 links: item.links,
                 url: item.links?.first,
-                due_at: item.dueDate
+                due_at: dueAtISO
             )
             validTasks.append(task)
         }
         return validTasks
+    }
+}
+
+/// Helper for due date offset calculation based on exit tag
+private enum DueDateHelper {
+    static func offset(for exitTag: ExitTag) -> Int {
+        switch exitTag {
+        case .sell: return -7   // 1週間前
+        case .give: return -5   // 5日前
+        case .recycle: return -3  // 3日前
+        case .trash: return -2  // 2日前
+        case .keep: return -1   // 前日
+        }
     }
 }

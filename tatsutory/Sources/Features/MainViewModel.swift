@@ -7,10 +7,11 @@ class MainViewModel: ObservableObject {
     @Published var showingCamera = false
     @Published var showingPreview = false
     @Published var isLoading = false
+    @Published var loadingMessage = ""
     @Published var generatedPlan: PlanResult?
     @Published var showingConsentDialog = false
     @Published var consentMessage = ""
-    
+
     private let intentStore = IntentSettingsStore.shared
     private let consentStore = ConsentStore.shared
 #if DEBUG
@@ -74,10 +75,14 @@ class MainViewModel: ObservableObject {
         let planner = TidyPlanner()
         let settings = intentStore.value
         let allowNetwork = FeatureFlags.intentSettingsV1 && hasAPIKey && settings.llm.consent
-        generatedPlan = await planner.generate(from: image, allowNetwork: allowNetwork)
-        
+
+        generatedPlan = await planner.generate(from: image, allowNetwork: allowNetwork) { [weak self] message in
+            self?.loadingMessage = message
+        }
+
         showingPreview = true
         isLoading = false
+        loadingMessage = ""
         TelemetryTracker.shared.flushIfNeeded()
     }
     

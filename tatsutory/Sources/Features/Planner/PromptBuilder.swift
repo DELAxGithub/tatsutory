@@ -2,7 +2,7 @@ import Foundation
 
 struct PromptBuilder {
     // Base schema - minItems will be added dynamically based on detected item count
-    private static let baseSchema = #"{"type":"object","additionalProperties":false,"properties":{"tasks":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"title":{"type":"string"},"category":{"type":"string"},"exitTag":{"type":"string","enum":["SELL","GIVE","RECYCLE","TRASH","KEEP"]},"dueDate":{"type":"string"},"checklist":{"type":"array","items":{"type":"string"}},"tips":{"type":"string"},"links":{"type":"array","items":{"type":"string"}},"estimatedMinutes":{"type":"integer"},"note":{"type":"string"}},"required":["id","title","category","exitTag","dueDate","checklist","tips","links","estimatedMinutes","note"]}}},"required":["tasks"]}"#
+    private static let baseSchema = #"{"type":"object","additionalProperties":false,"properties":{"tasks":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"title":{"type":"string"},"category":{"type":"string"},"exitTag":{"type":"string","enum":["SELL","GIVE","RECYCLE","TRASH","KEEP"]},"checklist":{"type":"array","items":{"type":"string"}},"tips":{"type":"string"},"links":{"type":"array","items":{"type":"string"}},"estimatedMinutes":{"type":"integer"},"note":{"type":"string"}},"required":["id","title","category","exitTag","checklist","tips","links","estimatedMinutes","note"]}}},"required":["tasks"]}"#
 
     static func schema(for itemCount: Int) -> String {
         // Parse base schema and add minItems constraint
@@ -43,16 +43,9 @@ struct PromptBuilder {
         let systemPrompt: String
         let userPrompt: String
 
-        // アイテム情報を構造化
-        let itemsData = items.map { item in
-            [
-                "label": item.label,
-                "confidence": item.confidence,
-                "size": sizeCategory(for: item.areaRatio)
-            ]
-        }
-
         if isJapanese {
+            let regionalLinks = buildRegionalLinksGuide(locale: locale, isJapanese: true)
+
             systemPrompt = """
             片付け専門家として、1アイテム=1タスクで作成してください。
 
@@ -63,8 +56,11 @@ struct PromptBuilder {
             - チェックリスト2-3項目（簡潔に）
             - tips: そのカテゴリ/アイテム固有の販売・処分のコツ（1文）
             - note: 相場感や注意点（1文）
+            - links: 処分方法に応じた地域の参考リンク（下記から選択または類似サイト）
 
             処分方法: SELL/GIVE/RECYCLE/TRASH/KEEP
+
+            \(regionalLinks)
             """
 
             let itemsList = items.enumerated().map {
@@ -75,14 +71,16 @@ struct PromptBuilder {
             アイテム:
             \(itemsList)
 
-            設定: \(settings.goalDateISO) | \(purposeDescription(settings.purpose, isJapanese: true)) | \(locale.city), \(locale.country)
+            設定: \(purposeDescription(settings.purpose, isJapanese: true)) | \(locale.city), \(locale.country)
 
             例:
-            {"tasks":[{"id":"1","title":"TVを売却","category":"家電","exitTag":"SELL","dueDate":"2025-10-09T00:00:00Z","checklist":["型番確認","動作確認"],"tips":"大型家電は型番・年式を明記すると問い合わせが増える","links":["https://www.mercari.com/jp/"],"estimatedMinutes":30,"note":"50型以上は需要高、¥10,000-50,000"}]}
+            {"tasks":[{"id":"1","title":"TVを売却","category":"家電","exitTag":"SELL","checklist":["型番確認","動作確認"],"tips":"大型家電は型番・年式を明記すると問い合わせが増える","links":["https://www.mercari.com/jp/"],"estimatedMinutes":30,"note":"50型以上は需要高、¥10,000-50,000"}]}
 
             \(items.count)個の独立したタスクをJSONで出力
             """
         } else {
+            let regionalLinks = buildRegionalLinksGuide(locale: locale, isJapanese: false)
+
             systemPrompt = """
             Decluttering expert: 1 item = 1 task.
 
@@ -93,8 +91,11 @@ struct PromptBuilder {
             - 2-3 checklist items (brief)
             - tips: Category/item-specific selling/disposal tip (1 sentence)
             - note: Price range or caution (1 sentence)
+            - links: Regional reference links based on disposal method (choose from below or similar)
 
             Methods: SELL/GIVE/RECYCLE/TRASH/KEEP
+
+            \(regionalLinks)
             """
 
             let itemsList = items.enumerated().map { "\($0.offset + 1). \($0.element.label)" }.joined(separator: "\n")
@@ -106,7 +107,7 @@ struct PromptBuilder {
             Context: \(settings.goalDateISO) | \(purposeDescription(settings.purpose, isJapanese: false)) | \(locale.city), \(locale.country)
 
             Example:
-            {"tasks":[{"id":"1","title":"Sell TV","category":"electronics","exitTag":"SELL","dueDate":"2025-10-09T00:00:00Z","checklist":["Check model","Test display"],"tips":"Include model number and year to get more inquiries","links":["https://www.facebook.com/marketplace/"],"estimatedMinutes":30,"note":"50\"+ TVs high demand, $100-500"}]}
+            {"tasks":[{"id":"1","title":"Sell TV","category":"electronics","exitTag":"SELL","checklist":["Check model","Test display"],"tips":"Include model number and year to get more inquiries","links":["https://www.facebook.com/marketplace/"],"estimatedMinutes":30,"note":"50\"+ TVs high demand, $100-500"}]}
 
             Output \(items.count) separate tasks in JSON
             """
@@ -181,5 +182,65 @@ struct PromptBuilder {
             return "[]"
         }
         return String(data: data, encoding: .utf8) ?? "[]"
+    }
+
+    private static func buildRegionalLinksGuide(locale: UserLocale, isJapanese: Bool) -> String {
+        let country = locale.country.uppercased()
+        let city = locale.city.lowercased()
+
+        if isJapanese {
+            if country == "JP" {
+                return """
+                【地域別参考リンク（日本）】
+                - SELL: https://www.mercari.com/jp/ (メルカリ), https://auctions.yahoo.co.jp/ (ヤフオク), https://jmty.jp/ (ジモティー)
+                - GIVE: https://jmty.jp/ (ジモティー), https://www.facebook.com/groups/ (地域SNS)
+                - RECYCLE: https://www.env.go.jp/recycle/ (環境省リサイクル情報), 自治体の粗大ゴミ検索サイト
+                """
+            } else if country == "CA" {
+                if city.contains("toronto") {
+                    return """
+                    【地域別参考リンク（トロント）】
+                    - SELL: https://www.facebook.com/marketplace/, https://www.kijiji.ca/
+                    - GIVE: https://www.facebook.com/groups/, https://www.freecycle.org/
+                    - RECYCLE: https://www.toronto.ca/services-payments/recycling-organics-garbage/waste-wizard/ (トロント市ゴミ分別ガイド)
+                    """
+                }
+                return """
+                【地域別参考リンク（カナダ）】
+                - SELL: https://www.facebook.com/marketplace/, https://www.kijiji.ca/
+                - GIVE: https://www.facebook.com/groups/, https://www.freecycle.org/
+                - RECYCLE: https://www.canada.ca/en/environment-climate-change/services/managing-reducing-waste/municipal-solid/electronics.html
+                """
+            }
+        } else {
+            if country == "JP" {
+                return """
+                【Regional Links (Japan)】
+                - SELL: https://www.mercari.com/jp/ (Mercari), https://auctions.yahoo.co.jp/ (Yahoo Auctions), https://jmty.jp/ (Jimoty)
+                - GIVE: https://jmty.jp/ (Jimoty), https://www.facebook.com/groups/ (local groups)
+                - RECYCLE: https://www.env.go.jp/recycle/ (Ministry of Environment), local municipality waste search
+                """
+            } else if country == "CA" {
+                if city.contains("toronto") {
+                    return """
+                    【Regional Links (Toronto, Canada)】
+                    - SELL: https://www.facebook.com/marketplace/, https://www.kijiji.ca/
+                    - GIVE: https://www.facebook.com/groups/, https://www.freecycle.org/
+                    - RECYCLE: https://www.toronto.ca/services-payments/recycling-organics-garbage/waste-wizard/ (Toronto Waste Wizard)
+                    """
+                }
+                return """
+                【Regional Links (Canada)】
+                - SELL: https://www.facebook.com/marketplace/, https://www.kijiji.ca/
+                - GIVE: https://www.facebook.com/groups/, https://www.freecycle.org/
+                - RECYCLE: https://www.canada.ca/en/environment-climate-change/services/managing-reducing-waste/municipal-solid/electronics.html
+                """
+            }
+        }
+
+        // Default fallback
+        return isJapanese
+            ? "【参考リンク】\n- SELL: フリマアプリやオークションサイト\n- GIVE: 地域のSNSグループ\n- RECYCLE: 自治体のリサイクルガイド"
+            : "【Reference Links】\n- SELL: Marketplace apps or auction sites\n- GIVE: Local community groups\n- RECYCLE: Municipal recycling guide"
     }
 }

@@ -71,7 +71,6 @@ final class CameraSessionManager: NSObject, ObservableObject {
     }
     
     private func configureOutputs() throws {
-        photoOutput.isHighResolutionCaptureEnabled = false
         if photoOutput.isDepthDataDeliverySupported {
             photoOutput.isDepthDataDeliveryEnabled = false
         }
@@ -83,8 +82,15 @@ final class CameraSessionManager: NSObject, ObservableObject {
         } else {
             throw CameraError.configurationFailed
         }
-        if let connection = photoOutput.connection(with: .video), connection.isVideoOrientationSupported {
-            connection.videoOrientation = .portrait
+        if let connection = photoOutput.connection(with: .video) {
+            if #available(iOS 17.0, *) {
+                let portraitAngle: CGFloat = 90
+                if connection.isVideoRotationAngleSupported(portraitAngle) {
+                    connection.videoRotationAngle = portraitAngle
+                }
+            } else if connection.isVideoOrientationSupported {
+                connection.videoOrientation = .portrait
+            }
         }
     }
     
@@ -105,7 +111,6 @@ final class CameraSessionManager: NSObject, ObservableObject {
     func capturePhoto() {
         sessionQueue.async {
             let settings = AVCapturePhotoSettings()
-            settings.isHighResolutionPhotoEnabled = false
             self.photoOutput.capturePhoto(with: settings, delegate: self)
         }
     }

@@ -99,9 +99,8 @@ final class IntentSettingsStore: ObservableObject {
     }
 
     private func save(_ settings: IntentSettings) {
-        var payload = settings
         // persist consent separately via Keychain; ensure stored copy mirrors latest consent for defaults snapshot
-        if let data = try? JSONEncoder().encode(payload) {
+        if let data = try? JSONEncoder().encode(settings) {
             defaults.set(data, forKey: settingsKey)
         }
     }

@@ -21,7 +21,7 @@ struct CameraView: View {
         .onDisappear {
             cameraManager.stopRunning()
         }
-        .onChange(of: cameraManager.lastError != nil) { _ in
+        .onChange(of: cameraManager.lastError != nil) {
             isBusy = false
         }
         .alert(

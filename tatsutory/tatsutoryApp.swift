@@ -79,7 +79,14 @@ struct MainView: View {
     @ViewBuilder
     private var loadingView: some View {
         if viewModel.isLoading {
-            ProgressView(L10n.key("main.progress.analyzing"))
+            VStack(spacing: 12) {
+                ProgressView()
+                    .scaleEffect(1.2)
+                Text(viewModel.loadingMessage)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
         }
     }
 }

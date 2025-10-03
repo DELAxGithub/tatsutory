@@ -23,7 +23,7 @@ struct PlanPreviewView: View {
                     }
                     HapticsManager.shared.prepareIfNeeded()
                 }
-                .onChange(of: result.source) { newValue in
+                .onChange(of: result.source) { _, newValue in
                     viewModel.planSource = newValue
                     handleSourceChange(newValue)
                 }
