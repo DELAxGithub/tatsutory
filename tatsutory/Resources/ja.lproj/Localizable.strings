@@ -7,10 +7,12 @@
 "settings.openai.placeholder" = "APIキー";
 "settings.openai.caption" = "キーはキーチェーンに安全に保管され、共有されません。";
 "settings.purpose.header" = "目的";
+"settings.purpose.overview" = "初手モード";
 "settings.purpose.move_fast" = "引っ越し（スピード）";
 "settings.purpose.move_value" = "引っ越し（売却価値）";
 "settings.purpose.cleanup" = "大掃除";
 "settings.purpose.legacy" = "レガシー計画";
+"settings.purpose.overview_description" = "部屋全体の物量を把握し、処分作業の優先順位を提案します。";
 "settings.purpose.move_fast_description" = "とにかく早く片付けたい。処分方法は効率重視。";
 "settings.purpose.move_value_description" = "価値ある物を売って手放したい。相場調査と出品を重視。";
 "settings.purpose.cleanup_description" = "身の回りを整理整頓したい。保管と整理を重視。";
@@ -66,6 +68,7 @@
 "main.subtitle" = "引っ越し特化のタスク作成ツール";
 "main.action.take_photo" = "写真を撮る";
 "main.action.choose_photo" = "ギャラリーから選択";
+"main.hint.panorama" = "💡 初手モードではパノラマ写真が効果的です";
 "main.progress.analyzing" = "AI解析中...";
 "main.progress.analyzing_photo" = "写真を分析中...";
 "main.progress.generating_tasks" = "タスクを生成中...";

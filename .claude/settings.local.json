@@ -4,7 +4,12 @@
       "Bash(xcodebuild:*)",
       "Bash(find:*)",
       "Read(//Users/hiroshikodera/repos/_active/apps/**)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(printenv)",
+      "Bash(python3:*)",
+      "Read(//private/tmp/**)",
+      "Bash(cat:*)",
+      "Bash(xcrun simctl list:*)"
     ],
     "deny": [],
     "ask": []

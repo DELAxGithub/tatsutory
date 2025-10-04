@@ -76,9 +76,7 @@ class RemindersService {
 
         reminder.url = firstValidURL(from: task.links)
 
-        // TODO: Add tags when EKReminder.tags API becomes available
-        // Note: tags API requires iOS 15+ but seems to have compilation issues
-        // For now, we add tag information to notes instead
+        // Add tag information to notes
         var tagInfo: [String] = []
         if let exitTag = task.exit_tag {
             tagInfo.append("#\(exitTag.rawValue)")
@@ -97,9 +95,7 @@ class RemindersService {
             }
         }
 
-        // Note: EKReminder doesn't support direct photo attachments
-        // Photo is saved in gallery and can be accessed via Photos app
-        // We store the asset ID in notes for reference if needed
+        // Store photo asset ID in notes for reference
         if let photoAssetID = task.photoAssetID {
             if var notes = reminder.notes {
                 notes += "\n\n📷 Photo ID: \(photoAssetID)"

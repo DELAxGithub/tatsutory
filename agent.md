@@ -98,6 +98,7 @@
 ## 変更履歴
 
 - 2025-09-12: 初版作成
-
+ln -s http://AGENTS.md http://CLAUDE.md
 ---
 何をどこまで自動化するかは柔軟に調整します。必要があれば、このガイド自体の更新も依頼してください。
+When finished, review git diff including new files and generate a one-line commit message summarizing the changes

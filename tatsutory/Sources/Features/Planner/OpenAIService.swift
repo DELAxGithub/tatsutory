@@ -78,15 +78,6 @@ class OpenAIService {
 
         let schemaDict = parseJSONSchema(PromptBuilder.schema(for: itemCount))
 
-        #if DEBUG
-        // Log schema to verify minItems/maxItems are set correctly
-        if let schemaData = try? JSONSerialization.data(withJSONObject: schemaDict, options: .prettyPrinted),
-           let schemaString = String(data: schemaData, encoding: .utf8) {
-            print("📋 SCHEMA (itemCount=\(itemCount)):")
-            print(schemaString.prefix(1000))
-        }
-        #endif
-
         return [
             "model": model,
             "input": messages,
@@ -284,6 +275,182 @@ class OpenAIService {
             validTasks.append(task)
         }
         return validTasks
+    }
+
+    // MARK: - Overview Mode
+
+    func generateOverviewPlan(from image: UIImage, goalDate: String) async throws -> (OverviewPlan, String?) {
+        // Convert image to base64
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            throw TatsuToriError.invalidJSON
+        }
+        let base64Image = imageData.base64EncodedString()
+
+        // Build prompts
+        let prompts = PromptBuilder.buildOverviewPrompt(image: image, goalDate: goalDate)
+        let schemaString = PromptBuilder.overviewSchema()
+
+        // Build request
+        let url = URL(string: "https://api.openai.com/v1/responses")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = timeout
+
+        let schema = parseJSONSchema(schemaString)
+        let body: [String: Any] = [
+            "model": model,
+            "input": [
+                [
+                    "role": "system",
+                    "content": [["type": "input_text", "text": prompts.system]]
+                ],
+                [
+                    "role": "user",
+                    "content": [
+                        ["type": "input_text", "text": prompts.user],
+                        [
+                            "type": "input_image",
+                            "image_url": "data:image/jpeg;base64,\(base64Image)"
+                        ]
+                    ]
+                ]
+            ],
+            "text": [
+                "format": [
+                    "type": "json_schema",
+                    "name": "overview_plan",
+                    "schema": schema
+                ]
+            ],
+            "max_output_tokens": 2500,
+            "reasoning": ["effort": "low"]
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let meta = RequestLogMeta(path: request.url?.path ?? "", bodyBytes: request.httpBody?.count ?? 0)
+        logRequest(meta)
+
+        // Perform request
+        let (data, requestId) = try await performRequest(request, meta: meta)
+
+        // Parse response
+        let envelope = try JSONDecoder().decode(OpenAIResponsesEnvelope.self, from: data)
+
+        for output in envelope.outputs {
+            for content in output.content {
+                switch content.type {
+                case .outputJSON:
+                    if let jsonData = content.jsonData() {
+                        let plan = try JSONDecoder().decode(OverviewPlan.self, from: jsonData)
+                        return (plan, requestId)
+                    }
+                case .outputText:
+                    if let text = content.text,
+                       let planData = text.data(using: .utf8),
+                       let plan = try? JSONDecoder().decode(OverviewPlan.self, from: planData) {
+                        return (plan, requestId)
+                    }
+                default:
+                    break
+                }
+            }
+        }
+
+        throw TatsuToriError.invalidJSON
+    }
+
+    // MARK: - Overview to Tasks Conversion
+
+    func convertOverviewToTasks(plan: OverviewPlan) async throws -> ([TidyTask], String?) {
+        let prompts = PromptBuilder.buildOverviewToTasksPrompt(plan: plan)
+        let schemaString = PromptBuilder.schema(for: 5) // Default to 5 tasks
+        let schemaDict = parseJSONSchema(schemaString)
+
+        let messages = [
+            ["role": "system", "content": [["type": "input_text", "text": prompts.system]]],
+            ["role": "user", "content": [["type": "input_text", "text": prompts.user]]]
+        ]
+
+        let body: [String: Any] = [
+            "model": model,
+            "input": messages,
+            "text": [
+                "format": [
+                    "type": "json_schema",
+                    "name": "task_plan",
+                    "schema": schemaDict
+                ]
+            ]
+        ]
+
+        let requestData = try JSONSerialization.data(withJSONObject: body)
+
+        #if DEBUG
+        if let bodyString = String(data: requestData, encoding: .utf8) {
+            print("📋 [OverviewToTasks] Request body: \(bodyString.prefix(2000))")
+        }
+        #endif
+
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/responses")!)
+        request.httpMethod = "POST"
+        request.httpBody = requestData
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        let meta = RequestLogMeta(path: "/v1/responses", bodyBytes: requestData.count)
+        logRequest(meta)
+
+        let (data, requestId) = try await performRequest(request, meta: meta)
+        let envelope = try JSONDecoder().decode(OpenAIResponsesEnvelope.self, from: data)
+
+        logResponse(meta, response: nil, requestId: requestId, error: nil)
+
+        #if DEBUG
+        if let responseString = String(data: data, encoding: .utf8) {
+            print("📋 [OverviewToTasks] Response body: \(responseString.prefix(2000))")
+        }
+        #endif
+
+        #if DEBUG
+        print("📋 [OverviewToTasks] Outputs count: \(envelope.outputs.count)")
+        for (i, output) in envelope.outputs.enumerated() {
+            print("📋 [OverviewToTasks] Output \(i): type=\(output.type ?? "nil"), status=\(output.status ?? "nil"), content count=\(output.content.count)")
+            for (j, content) in output.content.enumerated() {
+                print("📋 [OverviewToTasks] Content \(j): type=\(content.type.identifier)")
+                if content.type == .outputJSON, let jsonData = content.jsonData() {
+                    if let jsonString = String(data: jsonData, encoding: .utf8) {
+                        print("📋 [OverviewToTasks] JSON: \(jsonString.prefix(500))")
+                    }
+                } else if content.type == .outputText, let text = content.text {
+                    print("📋 [OverviewToTasks] TEXT: \(text.prefix(1000))")
+                }
+            }
+        }
+        #endif
+
+        let settings = IntentSettingsStore.shared.value
+        let locale = UserLocale(country: settings.region, city: "")
+
+        for output in envelope.outputs {
+            for content in output.content {
+                if content.type == .outputJSON,
+                   let jsonData = content.jsonData() {
+                    let response = try JSONDecoder().decode(TaskPlanResponse.self, from: jsonData)
+                    return (convertToTidyTasks(response.tasks, settings: settings, locale: locale), output.id)
+                } else if content.type == .outputText,
+                          let text = content.text,
+                          let jsonData = text.data(using: .utf8),
+                          let response = try? JSONDecoder().decode(TaskPlanResponse.self, from: jsonData) {
+                    // Fallback: Try parsing output_text as JSON
+                    return (convertToTidyTasks(response.tasks, settings: settings, locale: locale), output.id)
+                }
+            }
+        }
+
+        throw TatsuToriError.invalidJSON
     }
 }
 

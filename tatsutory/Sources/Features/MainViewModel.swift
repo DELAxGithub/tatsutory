@@ -12,6 +12,7 @@ class MainViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var loadingMessage = ""
     @Published var generatedPlan: PlanResult?
+    @Published var generatedOverviewPlan: OverviewPlan?
     @Published var showingConsentDialog = false
     @Published var consentMessage = ""
     @Published var capturedPhotoAssetID: String?
@@ -60,13 +61,10 @@ class MainViewModel: ObservableObject {
     
     func handleCapturedImage(_ image: UIImage) {
         Task {
-            // Save to gallery and get asset ID
-            if galleryService.hasPermission() {
-                do {
-                    capturedPhotoAssetID = try await galleryService.saveToGallery(image)
-                } catch {
-                    print("Failed to save photo to gallery: \(error)")
-                }
+            do {
+                capturedPhotoAssetID = try await galleryService.saveToGallery(image)
+            } catch {
+                print("Failed to save photo to gallery: \(error)")
             }
             await generatePlan(from: image)
         }
@@ -93,16 +91,21 @@ class MainViewModel: ObservableObject {
     func generatePlan(from image: UIImage) async {
         isLoading = true
 
-        let planner = TidyPlanner()
         let settings = intentStore.value
         let allowNetwork = FeatureFlags.intentSettingsV1 && hasAPIKey && settings.llm.consent
 
-        generatedPlan = await planner.generate(
-            from: image,
-            allowNetwork: allowNetwork,
-            photoAssetID: capturedPhotoAssetID
-        ) { [weak self] message in
-            self?.loadingMessage = message
+        // Check if overview mode
+        if settings.purpose == .overview {
+            await generateOverviewPlan(from: image, settings: settings, allowNetwork: allowNetwork)
+        } else {
+            let planner = TidyPlanner()
+            generatedPlan = await planner.generate(
+                from: image,
+                allowNetwork: allowNetwork,
+                photoAssetID: capturedPhotoAssetID
+            ) { [weak self] message in
+                self?.loadingMessage = message
+            }
         }
 
         showingPreview = true
@@ -110,6 +113,35 @@ class MainViewModel: ObservableObject {
         loadingMessage = ""
         capturedPhotoAssetID = nil  // Reset after use
         TelemetryTracker.shared.flushIfNeeded()
+    }
+
+    private func generateOverviewPlan(from image: UIImage, settings: IntentSettings, allowNetwork: Bool) async {
+        loadingMessage = "部屋全体を分析中..."
+
+        guard allowNetwork else {
+            // ネットワーク未許可の場合はフォールバック
+            loadingMessage = ""
+            return
+        }
+
+        let apiKey = Secrets.load()
+        guard !apiKey.isEmpty else {
+            loadingMessage = ""
+            return
+        }
+
+        let service = OpenAIService(apiKey: apiKey)
+        do {
+            let (plan, requestId) = try await service.generateOverviewPlan(
+                from: image,
+                goalDate: settings.goalDateISO
+            )
+            generatedOverviewPlan = plan
+            TelemetryTracker.shared.event("overview_plan_success", ["requestId": requestId ?? ""])
+        } catch {
+            print("Overview plan generation failed: \(error)")
+            TelemetryTracker.shared.event("overview_plan_failed", ["error": "\(error)"])
+        }
     }
     
     func handlePlanCompletion(success: Bool) {

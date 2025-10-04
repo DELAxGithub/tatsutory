@@ -77,7 +77,7 @@ struct SettingsView: View {
                 Text(L10n.key("settings.purpose.header"))
                     .font(.headline)
 
-                ForEach([Purpose.move_fast, Purpose.move_value, Purpose.cleanup], id: \.self) { purpose in
+                ForEach([Purpose.overview, Purpose.move_fast, Purpose.move_value, Purpose.cleanup], id: \.self) { purpose in
                     Button(action: {
                         store.update { $0.purpose = purpose }
                     }) {
@@ -349,6 +349,7 @@ struct SettingsView: View {
 
     private func purposeTitleKey(_ purpose: Purpose) -> String {
         switch purpose {
+        case .overview: return "settings.purpose.overview"
         case .move_fast: return "settings.purpose.move_fast"
         case .move_value: return "settings.purpose.move_value"
         case .cleanup: return "settings.purpose.cleanup"
@@ -358,6 +359,7 @@ struct SettingsView: View {
 
     private func purposeDescriptionKey(_ purpose: Purpose) -> String {
         switch purpose {
+        case .overview: return "settings.purpose.overview_description"
         case .move_fast: return "settings.purpose.move_fast_description"
         case .move_value: return "settings.purpose.move_value_description"
         case .cleanup: return "settings.purpose.cleanup_description"

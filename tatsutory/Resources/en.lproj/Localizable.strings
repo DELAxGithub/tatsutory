@@ -7,10 +7,12 @@
 "settings.openai.placeholder" = "API Key";
 "settings.openai.caption" = "Stored securely in Keychain and never shared.";
 "settings.purpose.header" = "Purpose";
+"settings.purpose.overview" = "Overview Mode";
 "settings.purpose.move_fast" = "Move (Speed)";
 "settings.purpose.move_value" = "Move (Value)";
 "settings.purpose.cleanup" = "Deep Clean";
 "settings.purpose.legacy" = "Legacy planning";
+"settings.purpose.overview_description" = "Assess total volume and get disposal priorities for moving.";
 "settings.purpose.move_fast_description" = "Get it done quickly. Focus on efficient disposal methods.";
 "settings.purpose.move_value_description" = "Sell valuable items. Focus on research and listing.";
 "settings.purpose.cleanup_description" = "Organize your space. Focus on storage and tidying.";
@@ -66,6 +68,7 @@
 "main.subtitle" = "Moving-specific task maker";
 "main.action.take_photo" = "Take Photo";
 "main.action.choose_photo" = "Choose from Gallery";
+"main.hint.panorama" = "💡 Panorama photos work best for overview mode";
 "main.progress.analyzing" = "AI analyzing...";
 "main.progress.analyzing_photo" = "Analyzing photo...";
 "main.progress.generating_tasks" = "Generating tasks...";

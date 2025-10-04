@@ -24,6 +24,7 @@ struct FeatureFlags {
 // MARK: - Models
 
 enum Purpose: String, Codable, CaseIterable {
+    case overview      // 初手モード：引越しの総量把握と優先順位提案
     case move_fast
     case move_value
     case cleanup

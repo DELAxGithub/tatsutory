@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 struct PromptBuilder {
     // Base schema - minItems will be added dynamically based on detected item count
@@ -162,6 +163,7 @@ struct PromptBuilder {
     private static func purposeDescription(_ purpose: Purpose, isJapanese: Bool) -> String {
         if isJapanese {
             switch purpose {
+            case .overview: return "引越しの総量把握と優先順位"
             case .move_fast: return "とにかく早く片付けたい"
             case .move_value: return "価値ある物を売って手放したい"
             case .cleanup: return "身の回りを整理整頓したい"
@@ -169,6 +171,7 @@ struct PromptBuilder {
             }
         }
         switch purpose {
+        case .overview: return "Moving overview and prioritization"
         case .move_fast: return "Move quickly"
         case .move_value: return "Maximize resale value"
         case .cleanup: return "General cleanup"
@@ -242,5 +245,223 @@ struct PromptBuilder {
         return isJapanese
             ? "【参考リンク】\n- SELL: フリマアプリやオークションサイト\n- GIVE: 地域のSNSグループ\n- RECYCLE: 自治体のリサイクルガイド"
             : "【Reference Links】\n- SELL: Marketplace apps or auction sites\n- GIVE: Local community groups\n- RECYCLE: Municipal recycling guide"
+    }
+
+    // MARK: - Overview Mode Prompt
+
+    static func buildOverviewPrompt(image: UIImage, goalDate: String) -> (system: String, user: String) {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+
+        let systemPrompt: String
+        let userPrompt: String
+
+        if isJapanese {
+            systemPrompt = """
+            あなたは引越し・処分プランナーです。
+            部屋の写真を分析し、引越しに向けた処分作業の優先順位を提案してください。
+
+            【重要な視点】
+            - 総量把握：部屋全体にどのくらいの物があり、処分すべき物の量を見積もる
+            - 処分品分類：SELL（売る）、GIVE（譲る）、RECYCLE（処分）、KEEP（持っていく）の仕分け
+            - サルベージ優先：まだ使える物・売れる物を見逃さない
+            - ゴール日からの逆算：処分に時間がかかる物（売却、寄付手配）から着手
+
+            【分析の優先順位】
+            1. 大物・処分判断が重い物（家具・家電）→ 売却/処分に時間がかかる
+            2. 量が多いエリア（クローゼット、収納棚）→ 仕分けに時間がかかる
+            3. 売却価値がある物（ガジェット、家電、家具）→ 早めの出品が有利
+            4. 日常生活への影響が少ない物 → 先に片付けても支障なし
+
+            【時間見積もり】
+            - 仕分け：1エリアあたり30-60分
+            - 出品準備：写真撮影・説明文作成で物1つあたり10-30分
+            - 処分手配：粗大ゴミ予約、寄付先調査などで30-60分
+
+            【考え方】
+            - 完璧な片付けではなく、「処分すべき物の洗い出し」が目的
+            - 後から詳細な仕分けをするため、まずは物の総量とカテゴリを把握
+            - 売却できる物は早めに出品（引越し直前では間に合わない）
+
+            必ず以下のJSON形式で出力してください。
+            """
+
+            userPrompt = """
+            この部屋の写真を分析し、引越しに向けた処分作業の優先順位を提案してください。
+            ゴール日（引越し日）: \(goalDate)
+            """
+        } else {
+            systemPrompt = """
+            You are a moving and disposal planner.
+            Analyze the room photo and suggest priorities for disposal tasks toward moving day.
+
+            [Key Perspectives]
+            - Volume Assessment: Estimate total items and disposal volume
+            - Classification: SELL (sell), GIVE (donate), RECYCLE (dispose), KEEP (bring)
+            - Salvage Priority: Don't miss valuable or usable items
+            - Work Backward from Goal: Start with items requiring time (selling, donation arrangements)
+
+            [Analysis Priority]
+            1. Large items/heavy decisions (furniture, appliances) → Takes time to sell/dispose
+            2. High-volume areas (closets, storage) → Takes time to sort
+            3. Items with resale value (gadgets, electronics, furniture) → Early listing is advantageous
+            4. Items with low daily impact → Can be dealt with first without disruption
+
+            [Time Estimates]
+            - Sorting: 30-60 min per area
+            - Listing prep: 10-30 min per item (photos, descriptions)
+            - Disposal arrangements: 30-60 min (bulk waste booking, donation research)
+
+            [Approach]
+            - Goal is "identifying disposal items", not perfect organization
+            - Get total volume and categories first, detailed sorting comes later
+            - List sellable items early (won't make it last minute before moving)
+
+            Output must be in the following JSON format.
+            """
+
+            userPrompt = """
+            Analyze this room photo and suggest disposal task priorities for moving day.
+            Goal date (moving day): \(goalDate)
+            """
+        }
+
+        return (systemPrompt, userPrompt)
+    }
+
+    static func overviewSchema() -> String {
+        return """
+        {
+          "type": "object",
+          "required": ["overview", "priority_areas", "quick_start"],
+          "additionalProperties": false,
+          "properties": {
+            "overview": {
+              "type": "object",
+              "required": ["状態", "推定時間", "主な課題"],
+              "additionalProperties": false,
+              "properties": {
+                "状態": {"type": "string", "description": "物の総量と処分対象の見積もり"},
+                "推定時間": {"type": "string", "description": "仕分け・処分手配の総時間"},
+                "主な課題": {"type": "array", "items": {"type": "string"}, "maxItems": 3}
+              }
+            },
+            "priority_areas": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 5,
+              "items": {
+                "type": "object",
+                "required": ["順位", "エリア名", "理由", "作業内容", "所要時間", "難易度", "効果"],
+                "additionalProperties": false,
+                "properties": {
+                  "順位": {"type": "integer", "minimum": 1},
+                  "エリア名": {"type": "string"},
+                  "理由": {"type": "string"},
+                  "作業内容": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 2,
+                    "maxItems": 4
+                  },
+                  "所要時間": {"type": "string"},
+                  "難易度": {"enum": ["簡単", "普通", "難しい"]},
+                  "効果": {"enum": ["大", "中", "小"]}
+                }
+              }
+            },
+            "quick_start": {
+              "type": "string",
+              "description": "最初の30分で処分対象の総量把握のために何をすべきか"
+            }
+          }
+        }
+        """
+    }
+
+    static func buildOverviewToTasksPrompt(plan: OverviewPlan) -> (system: String, user: String) {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+
+        let systemPrompt: String
+        let userPrompt: String
+
+        if isJapanese {
+            systemPrompt = """
+            あなたは引越しタスク作成の専門家です。
+            初手モードの優先順位提案をもとに、実行可能なタスクリストを作成します。
+
+            【タスク作成の原則】
+            1. 各優先エリアを2-4個の具体的なタスクに分解
+            2. タスクは実行可能な粒度（15-60分程度）
+            3. exit_tagは処分方法を反映：SELL/GIVE/RECYCLE/KEEP
+            4. 優先度は順位に応じて設定（1位=5, 2位=4, 3位以降=3）
+            5. チェックリストは具体的な作業手順
+            """
+
+            userPrompt = """
+            以下の初手モード分析結果から、実行可能なタスクリストを作成してください。
+
+            【全体概要】
+            状態: \(plan.overview.state)
+            推定時間: \(plan.overview.estimatedTime)
+            主な課題: \(plan.overview.mainIssues.joined(separator: ", "))
+
+            【優先エリア】
+            \(plan.priorityAreas.map { area in
+                """
+                #\(area.rank) \(area.areaName)
+                理由: \(area.reason)
+                作業: \(area.tasks.joined(separator: ", "))
+                所要時間: \(area.timeRequired)
+                難易度: \(area.difficulty.rawValue)
+                効果: \(area.impact.rawValue)
+                """
+            }.joined(separator: "\n\n"))
+
+            【最初の30分】
+            \(plan.quickStart)
+
+            上記をもとに、優先順位の高いエリアから実行可能なタスクを作成してください。
+            """
+        } else {
+            systemPrompt = """
+            You are a moving task creation expert.
+            Create an actionable task list based on the overview mode priority recommendations.
+
+            [Task Creation Principles]
+            1. Break each priority area into 2-4 specific tasks
+            2. Tasks should be actionable in 15-60 minutes
+            3. exit_tag reflects disposal method: SELL/GIVE/RECYCLE/KEEP
+            4. Priority based on rank (1st=5, 2nd=4, 3rd+=3)
+            5. Checklist contains specific action steps
+            """
+
+            userPrompt = """
+            Create an actionable task list from the following overview mode analysis.
+
+            [Overview]
+            State: \(plan.overview.state)
+            Estimated Time: \(plan.overview.estimatedTime)
+            Main Issues: \(plan.overview.mainIssues.joined(separator: ", "))
+
+            [Priority Areas]
+            \(plan.priorityAreas.map { area in
+                """
+                #\(area.rank) \(area.areaName)
+                Reason: \(area.reason)
+                Tasks: \(area.tasks.joined(separator: ", "))
+                Time Required: \(area.timeRequired)
+                Difficulty: \(area.difficulty.rawValue)
+                Impact: \(area.impact.rawValue)
+                """
+            }.joined(separator: "\n\n"))
+
+            [First 30 Minutes]
+            \(plan.quickStart)
+
+            Based on the above, create actionable tasks starting from the highest priority areas.
+            """
+        }
+
+        return (systemPrompt, userPrompt)
     }
 }

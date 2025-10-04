@@ -102,3 +102,80 @@ extension Plan {
         )
     }
 }
+
+// MARK: - Overview Plan Models
+
+/// 初手モード（Overview Mode）のレスポンス構造
+struct OverviewPlan: Codable {
+    let overview: Overview
+    let priorityAreas: [PriorityArea]
+    let quickStart: String
+
+    enum CodingKeys: String, CodingKey {
+        case overview
+        case priorityAreas = "priority_areas"
+        case quickStart = "quick_start"
+    }
+
+    struct Overview: Codable {
+        let state: String          // 状態: 物の総量と処分対象の見積もり
+        let estimatedTime: String  // 推定時間: 仕分け・処分手配の総時間
+        let mainIssues: [String]   // 主な課題
+
+        enum CodingKeys: String, CodingKey {
+            case state = "状態"
+            case estimatedTime = "推定時間"
+            case mainIssues = "主な課題"
+        }
+    }
+
+    struct PriorityArea: Codable, Identifiable {
+        let rank: Int              // 順位
+        let areaName: String       // エリア名
+        let reason: String         // 理由
+        let tasks: [String]        // 作業内容
+        let timeRequired: String   // 所要時間
+        let difficulty: Difficulty // 難易度
+        let impact: Impact         // 効果
+
+        var id: Int { rank }
+
+        enum CodingKeys: String, CodingKey {
+            case rank = "順位"
+            case areaName = "エリア名"
+            case reason = "理由"
+            case tasks = "作業内容"
+            case timeRequired = "所要時間"
+            case difficulty = "難易度"
+            case impact = "効果"
+        }
+
+        enum Difficulty: String, Codable {
+            case easy = "簡単"
+            case normal = "普通"
+            case hard = "難しい"
+
+            var displayText: String {
+                switch self {
+                case .easy: return "簡単"
+                case .normal: return "普通"
+                case .hard: return "難しい"
+                }
+            }
+        }
+
+        enum Impact: String, Codable {
+            case high = "大"
+            case medium = "中"
+            case low = "小"
+
+            var displayText: String {
+                switch self {
+                case .high: return "大"
+                case .medium: return "中"
+                case .low: return "小"
+                }
+            }
+        }
+    }
+}
